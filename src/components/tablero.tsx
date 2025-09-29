@@ -1,11 +1,11 @@
 import type { CSSProperties } from 'react';
-import { useState } from 'react';
-import{
-    DndContext,
-    useDroppable,
-    PointerSensor,
-    useSensor,
-    useSensors,
+import { useMemo, useState } from 'react';
+import {
+  DndContext,
+  useDroppable,
+  PointerSensor,
+  useSensor,
+  useSensors,
 } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { BLOQUES, DIAS } from '../data';
@@ -13,7 +13,15 @@ import type { Dia, Bloque } from '../types';
 import { useTableroStore } from '../store/useTableroStore';
 import Iman from './iman';
 
-function Celda({ dia, bloque, children }: { dia: Dia; bloque: Bloque; children?: React.ReactNode }) {
+function Celda({
+  dia,
+  bloque,
+  children,
+}: {
+  dia: Dia;
+  bloque: Bloque;
+  children?: React.ReactNode;
+}) {
   const id = `${dia}|${bloque}`;
   const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -44,28 +52,51 @@ function Celda({ dia, bloque, children }: { dia: Dia; bloque: Bloque; children?:
 }
 
 export default function Tablero() {
-  const { imanes, posiciones, ubicarIman, removerIman } = useTableroStore();
+  const { imanes, posiciones, ubicarIman, removerImanEn, moverIman } = useTableroStore();
   const [mensaje, setMensaje] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
+  // Conteo de módulos usados por imán
+  const usadosMap = useMemo(() => {
+    const m = new Map<string, number>();
+    posiciones.forEach((p) => m.set(p.imanId, (m.get(p.imanId) ?? 0) + 1));
+    return m;
+  }, [posiciones]);
+
+  const restantesDe = (imanId: string) => {
+    const iman = imanes.find((i) => i.id === imanId);
+    if (!iman) return 0;
+    const usados = usadosMap.get(imanId) ?? 0;
+    return Math.max(iman.modulos - usados, 0);
+  };
+
+  // Bandeja: mostrar solo imanes con módulos disponibles
+  const bandeja = imanes.filter((i) => restantesDe(i.id) > 0);
+
   const onDragEnd = (e: DragEndEvent) => {
-    const imanId = String(e.active.id);
+    const activeId = String(e.active.id);
     const overId = e.over?.id as string | undefined;
     if (!overId) return;
 
-    const [dia, bloque] = overId.split('|') as [Dia, Bloque];
-    const { ok, reason } = ubicarIman(imanId, dia, bloque);
+    // Desde la bandeja (id = iman.id)
+    if (!activeId.startsWith('placed:')) {
+      const [dia, bloque] = overId.split('|') as [Dia, Bloque];
+      const { ok, reason } = ubicarIman(activeId, dia, bloque);
+      setMensaje(ok ? null : reason ?? null);
+      return;
+    }
+
+    // Desde la grilla (id = placed:<imanId>|<fromDia>|<fromBloque>)
+    const [, payload] = activeId.split(':'); // "<imanId>|Lun|1º"
+    const [/*imanId*/, fromDia, fromBloque] = payload.split('|') as [string, Dia, Bloque];
+    const [toDia, toBloque] = overId.split('|') as [Dia, Bloque];
+
+    const { ok, reason } = moverIman(fromDia, fromBloque, toDia, toBloque);
     setMensaje(ok ? null : reason ?? null);
   };
-
-  const imanesUbicados = new Map<string, string>();
-  posiciones.forEach((p) => imanesUbicados.set(p.imanId, `${p.dia}|${p.bloque}`));
-  const bandeja = imanes.filter((i) => !imanesUbicados.has(i.id));
 
   const gridStyle: CSSProperties = {
     display: 'grid',
@@ -95,17 +126,17 @@ export default function Tablero() {
       )}
 
       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-        {/* Bandeja */}
+        {/* Bandeja de imanes con módulos restantes */}
         <section style={{ marginBottom: 16 }}>
           <h3 style={{ margin: '10px 0' }}>Imanes disponibles</h3>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {bandeja.map((iman) => (
-              <Iman key={iman.id} iman={iman} />
+              <Iman key={iman.id} iman={iman} restantes={restantesDe(iman.id)} draggable />
             ))}
           </div>
         </section>
 
-        {/* Grilla */}
+        {/* Grilla Días × Bloques */}
         <div style={gridStyle}>
           {/* Header */}
           <div style={{ background: '#f9fafb', padding: 10, fontWeight: 600 }}>Bloque</div>
@@ -123,15 +154,10 @@ export default function Tablero() {
             </div>
           ))}
 
-          {/* Celdas */}
+          {/* Filas */}
           {BLOQUES.map((b) => (
-            <>
-              <div
-                key={`lbl-${b}`}
-                style={{ background: '#f9fafb', padding: 10, fontWeight: 500 }}
-              >
-                {b}
-              </div>
+            <div key={`fila-${b}`} style={{ display: 'contents' }}>
+              <div style={{ background: '#f9fafb', padding: 10, fontWeight: 500 }}>{b}</div>
               {DIAS.map((d) => {
                 const pos = posiciones.find((p) => p.dia === d && p.bloque === b);
                 const iman = pos ? imanes.find((i) => i.id === pos.imanId) : undefined;
@@ -139,25 +165,24 @@ export default function Tablero() {
                   <Celda key={`${d}-${b}`} dia={d} bloque={b}>
                     {iman && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Iman iman={iman} />
+                        {/* draggable con id único por instancia colocada */}
+                        <Iman
+                          iman={iman}
+                          restantes={restantesDe(iman.id)}
+                          draggable
+                          dragId={`placed:${iman.id}|${d}|${b}`}
+                        />
                         <button
-                          onClick={() => removerIman(iman.id)}
-                          style={{
-                            border: '1px solid #e5e7eb',
-                            background: '#fff',
-                            borderRadius: 8,
-                            padding: '6px 8px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Quitar
+                            onClick={() => removerImanEn(d as Dia, b as Bloque)}
+                            style={{ fontSize: 14, color: '#9ca3af', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                            ×
                         </button>
                       </div>
                     )}
                   </Celda>
                 );
               })}
-            </>
+            </div>
           ))}
         </div>
       </DndContext>
