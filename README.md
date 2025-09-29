@@ -1,73 +1,39 @@
-# React + TypeScript + Vite
+# 🧲 Tablero Imantado de Horarios
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Una aplicación interactiva hecha en **React + TypeScript + Vite** que simula una **pizarra de horarios con imanes**, como las que se usan en escuelas para organizar clases, materias y docentes.  
+Permite arrastrar bloques de docentes a una grilla de días y horas, detectar choques de horarios y guardar la configuración localmente.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Funcionalidades
 
-## React Compiler
+- ✅ Grilla de horarios (Días × Bloques horarios)
+- ✅ "Imanes" con materia, docente y rol (titular, suplente, etc.)
+- ✅ Drag & drop entre bandeja y grilla con `@dnd-kit`
+- ✅ Validación de **choques de horario** por docente
+- ✅ Guardado automático en `localStorage`
+- ✅ Botón para exportar/importar como JSON
+- ✅ Reset de posiciones rápido
+- ✅ Visual moderno, adaptable
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🛠️ Tecnologías
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [React](https://reactjs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vitejs.dev/)
+- [@dnd-kit/core](https://dndkit.com/) – sistema de drag & drop
+- [Zustand](https://zustand-demo.pmnd.rs/) – manejo de estado con persistencia
+- [CSS puro] – sin frameworks, fácil de adaptar
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🚀 Cómo iniciar el proyecto
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 1. Clonar el repositorio
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/tu-usuario/tablero-horarios.git
+cd tablero-horarios
 ```
