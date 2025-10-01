@@ -19,13 +19,14 @@ function ImanContent({ iman, restantes }: BaseProps) {
             style={{
                 marginLeft: 6,
                 fontSize: 12,
-                background: '#111827',
-                color: '#fff',
-                borderRadius: 999,
-                padding: '2px 6px',
-                lineHeight: 1,
+                color: 'black',
+                fontWeight: 'bold',
+                padding: '1px 6px',
+                lineHeight: 1
             }}
-        >{ restantes }</span>
+            >
+                {restantes}
+        </span>
       )}
     </>
   );
@@ -44,9 +45,15 @@ export function ImanStatic({ iman, restantes }: BaseProps) {
         border: '1px solid rgba(0,0,0,0.08)',
         position: 'relative',
         zIndex: 1,
-        display: 'inline-flex',
         gap: 8,
         alignItems: 'center',
+        maxWidth: '100%',               // no se pasa del ancho de la celda
+        overflow: 'hidden',             // corta exceso
+        textOverflow: 'ellipsis',       // agrega “…” si no entra
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        whiteSpace: 'normal',
     };
     return <div style={style}><ImanContent iman={iman} restantes={restantes} /></div>;
 }
@@ -68,9 +75,15 @@ function DraggableIman({ iman, restantes, dragId }: DraggableProps) {
         border: '1px solid rgba(0,0,0,0.08)',
         position: 'relative',
         zIndex: isDragging ? 9999 : 1,
-        display: 'inline-flex',
         gap: 8,
         alignItems: 'center',
+        maxWidth: '100%',               // no se pasa del ancho de la celda
+        overflow: 'hidden',             // corta exceso
+        textOverflow: 'ellipsis',       // agrega “…” si no entra
+        display: '-webkit-box',
+        WebkitLineClamp: 2, 
+        WebkitBoxOrient: 'vertical',
+        whiteSpace: 'normal',
     };
 
     return (

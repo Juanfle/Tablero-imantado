@@ -3,13 +3,14 @@ import { useMemo, useState } from 'react';
 import {
     DndContext,
     useDroppable,
+    DragOverlay,
     PointerSensor,
     useSensor,
     useSensors,
 } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { BLOQUES, DIAS } from '../data';
-import type { Dia, Bloque } from '../types';
+import type { Dia, Bloque, Iman as ImanModel } from '../types';
 import { useTableroStore } from '../store/useTableroStore';
 import Iman from './iman';
 
@@ -25,12 +26,17 @@ function Celda({
     const id = `${dia}|${bloque}`;
     const { setNodeRef, isOver } = useDroppable({ id });
 
+    const CELL_HEIGHT = 86; // ajustá si querés
+
     const style: CSSProperties = {
-        minHeight: 86,
+        height: CELL_HEIGHT,          // <- altura fija
         border: '1px solid #e5e7eb',
         background: isOver ? '#fef3c7' : '#fff',
         padding: 8,
         position: 'relative',
+        overflow: 'hidden',           // <- NO permite que el contenido la agrande
+        display: 'flex',              // <- para centrar contenido
+        alignItems: 'center'
     };
 
     return (
@@ -73,8 +79,20 @@ export default function Tablero() {
     };
 
     const bandeja = imanes.filter((i) => restantesDe(i.id) > 0);
+    const [activeIman, setActiveIman] = useState<ImanModel | null>(null);
 
-    const onDragEnd = (e: DragEndEvent) => {
+    const onDragStart = (e: DragStartEvent) => {
+        const activeId = String(e.active.id);
+        const imanId = activeId.startsWith('placed:')
+            ? activeId.split(':')[1].split('|')[0]
+            : activeId;
+
+        const iman = imanes.find(i => i.id === imanId) ?? null;
+        setActiveIman(iman);
+        };
+
+        const onDragEnd = (e: DragEndEvent) => {
+        setActiveIman(null);
         const activeId = String(e.active.id);
         const overId = e.over?.id as string | undefined;
         if (!overId) return;
@@ -89,7 +107,6 @@ export default function Tablero() {
         const [, payload] = activeId.split(':');
         const [/*imanId*/, fromDia, fromBloque] = payload.split('|') as [string, Dia, Bloque];
         const [toDia, toBloque] = overId.split('|') as [Dia, Bloque];
-
         const { ok, reason } = moverIman(fromDia, fromBloque, toDia, toBloque);
         setMensaje(ok ? null : reason ?? null);
     };
@@ -121,7 +138,7 @@ export default function Tablero() {
                 </div>
             )}
 
-        <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
                 {/* Bandeja de imanes con módulos restantes */}
                 <section style={{ marginBottom: 16 }}>
                     <h3 style={{ margin: '10px 0' }}>Imanes disponibles</h3>
@@ -160,20 +177,35 @@ export default function Tablero() {
                                 return (
                                     <Celda key={`${d}-${b}`} dia={d} bloque={b}>
                                         {iman && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                {/* draggable con id único por instancia colocada */}
-                                                <Iman
-                                                    iman={iman}
-                                                    restantes={restantesDe(iman.id)}
-                                                    draggable
-                                                    dragId={`placed:${iman.id}|${d}|${b}`}
-                                                />
-                                                <button
-                                                    onClick={() => removerImanEn(d as Dia, b as Bloque)}
-                                                    style={{ fontSize: 14, color: '#9ca3af', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                                                    ×
-                                                </button>
-                                            </div>
+                                            <>
+                                            <Iman
+                                                iman={iman}
+                                                restantes={restantesDe(iman.id)}
+                                                draggable
+                                                dragId={`placed:${iman.id}|${d}|${b}`}
+                                            />
+                                           <button
+                                            onClick={() => removerImanEn(d as Dia, b as Bloque)}
+                                            title="Quitar"
+                                            style={{
+                                                position: 'absolute',
+                                                top: 6,
+                                                right: 6,
+                                                width: 18,
+                                                height: 18,
+                                                border: 'none',
+                                                background: 'transparent',
+                                                color: '#9ca3af', // gris clarito
+                                                fontSize: 14,
+                                                fontWeight: 'bold',
+                                                lineHeight: '14px',
+                                                cursor: 'pointer',
+                                                padding: 0,
+                                            }}
+                                            >
+                                            ×
+                                            </button>
+                                            </>
                                         )}
                                     </Celda>
                                 );
@@ -181,6 +213,13 @@ export default function Tablero() {
                         </div>
                     ))}
                 </div>
+                <DragOverlay dropAnimation={null}>
+                {activeIman ? (
+                    <div style={{ zIndex: 99999, pointerEvents: 'none' }}>
+                        <Iman iman={activeIman} restantes={restantesDe(activeIman.id)} />
+                    </div>
+                ) : null}
+            </DragOverlay>
             </DndContext>
         </div>
     );
