@@ -17,6 +17,7 @@ interface TableroState {
         toDia: Dia,
         toBloque: Bloque
     ) => { ok: boolean; reason?: string };
+    updateIman: (imanId: string, patch: Partial<Iman>) => void;
 }
 
 
@@ -86,6 +87,12 @@ export const useTableroStore = create<TableroState>()(
 
                 set({ posiciones: nuevas });
                 return { ok: true };
+            },
+
+            updateIman: (imanId, patch) => {
+                const { imanes } = get();
+                const siguientes = imanes.map(i => (i.id === imanId ? { ...i, ...patch } : i));
+                set({ imanes: siguientes });
             },
 
         }),

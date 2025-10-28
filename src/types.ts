@@ -6,6 +6,9 @@ export interface Iman {
     materia: string;
     docente: string;
     rol: 'Titular' | 'Provisional' | 'Suplente';
+    // opcional: segundo profesor relacionado (ej: suplente)
+    docente2?: string;
+    rol2?: 'Titular' | 'Provisional' | 'Suplente';
     color?: string;
     modulos: number;
 }
