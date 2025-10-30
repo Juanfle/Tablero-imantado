@@ -1,5 +1,5 @@
-import type { CSSProperties } from 'react';
 import { useState } from 'react';
+import styles from './Iman.module.css';
 import { useDraggable } from '@dnd-kit/core';
 import type { Iman as ImanType } from '../types';
 import { useTableroStore } from '../store/useTableroStore';
@@ -28,30 +28,28 @@ function ImanEditor({ iman, onCancel }: { iman: ImanType; onCancel: () => void }
         onCancel();
     };
 
-    const inputStyle: CSSProperties = { width: '100%', padding: '8px 10px', marginBottom: 10, borderRadius: 6, border: '1px solid #ddd' };
-
     return (
-        <div style={{ padding: 16, width: 480 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px', gap: 10 }}>
-                <input style={{ gridColumn: '1 / span 1', ...inputStyle }} value={materia} onChange={e => setMateria(e.target.value)} placeholder="Materia" />
-                <input style={{ gridColumn: '2 / span 1', ...inputStyle }} value={modulos} onChange={e => setModulos(e.target.value)} placeholder="Módulos" />
-                <input style={{ gridColumn: '1 / span 1', ...inputStyle }} value={docente} onChange={e => setDocente(e.target.value)} placeholder="Docente principal" />
+        <div className={styles.editor}>
+            <div className={styles.formGrid}>
+                <input className={styles.input} value={materia} onChange={e => setMateria(e.target.value)} placeholder="Materia" />
+                <input className={styles.input} value={modulos} onChange={e => setModulos(e.target.value)} placeholder="Módulos" />
+                <input className={styles.input} value={docente} onChange={e => setDocente(e.target.value)} placeholder="Docente principal" />
                 {/* primary role: only Titular or Provisional */}
-                <select style={{ gridColumn: '2 / span 1', padding: '8px', borderRadius: 6, border: '1px solid #ddd' }} value={rol} onChange={e => setRol(e.target.value as ImanType['rol'])}>
+                <select className={styles.input} value={rol} onChange={e => setRol(e.target.value as ImanType['rol'])}>
                     <option value="Titular">Titular</option>
                     <option value="Provisional">Provisional</option>
                 </select>
             </div>
 
-            <hr style={{ margin: '12px 0' }} />
+            <hr className={styles.hr} />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
-                <input style={inputStyle} value={docente2} onChange={e => setDocente2(e.target.value)} placeholder="Suplente (opcional)" />
+            <div className={styles.singleColumn}>
+                <input className={styles.input} value={docente2} onChange={e => setDocente2(e.target.value)} placeholder="Suplente (opcional)" />
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button onClick={save} style={{ flex: 1, padding: '10px 12px' }}>Guardar</button>
-                <button onClick={onCancel} style={{ flex: 1, padding: '10px 12px' }}>Cancelar</button>
+            <div className={styles.actions}>
+                <button onClick={save} className={`${styles.btn} ${styles.btnPrimary}`}>Guardar</button>
+                <button onClick={onCancel} className={`${styles.btn} ${styles.btnNeutral}`}>Cancelar</button>
             </div>
         </div>
     );
@@ -75,19 +73,7 @@ function ImanContent({ iman, restantes }: BaseProps) {
         <>
             <strong>{iman.materia}</strong> — {teacherName} <em>({teacherRole})</em>
             {typeof restantes === 'number' && (
-                <span
-                    title="Módulos restantes"
-                    style={{
-                        marginLeft: 6,
-                        fontSize: 12,
-                        color: 'black',
-                        fontWeight: 'bold',
-                        padding: '1px 6px',
-                        lineHeight: 1,
-                    }}
-                >
-                    {restantes}
-                </span>
+                <span title="Módulos restantes" className={styles.restantes}>{restantes}</span>
             )}
         </>
     );
@@ -95,81 +81,40 @@ function ImanContent({ iman, restantes }: BaseProps) {
 
 function ExpandedImanView({ iman, onEdit, onClose, disableClose }: { iman: ImanType; restantes?: number; onEdit: () => void; onClose: () => void; disableClose?: boolean }) {
     return (
-        <div style={{ padding: 12 }}>
+        <div className={styles.expandedInner}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <div>
-                    <strong style={{ fontSize: 16 }}>{iman.materia}</strong>
-                    <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.7)' }}>{iman.docente} <em>({iman.rol})</em></div>
+                    <strong className={styles.title}>{iman.materia}</strong>
+                    <div className={styles.meta}>{iman.docente} <em>({iman.rol})</em></div>
                     {iman.docente2 && (
-                        <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.65)' }}>+ {iman.docente2} <em>({iman.rol2})</em></div>
+                        <div className={styles.metaSecondary}>+ {iman.docente2} <em>({iman.rol2})</em></div>
                     )}
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={onEdit} style={{ padding: '6px 10px' }}>Editar</button>
-                    <button disabled={disableClose} onClick={onClose} style={{ padding: '6px 10px', opacity: disableClose ? 0.5 : 1, cursor: disableClose ? 'not-allowed' : 'pointer' }}>{disableClose ? 'Cerrar (bloqueado)' : 'Cerrar'}</button>
+                <div className={styles.actions}>
+                    <button onClick={onEdit} className={`${styles.btn} ${styles.btnPrimary}`}>Editar</button>
+                    <button disabled={disableClose} onClick={onClose} className={`${styles.btn} ${styles.btnNeutral}`} style={{ opacity: disableClose ? 0.5 : 1, cursor: disableClose ? 'not-allowed' : 'pointer' }}>{disableClose ? 'Cerrar (bloqueado)' : 'Cerrar'}</button>
                 </div>
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.6)' }}>Módulos: {iman.modulos}</div>
+            <div className={styles.modules}>Módulos: {iman.modulos}</div>
         </div>
     );
 }
 
 export function ImanStatic({ iman, restantes }: BaseProps) {
-    const style: CSSProperties = {
-        padding: '8px 10px',
-        borderRadius: 10,
-        background: iman.color ?? '#e5e7eb',
-        color: '#111827',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
-        userSelect: 'none',
-        fontSize: 14,
-        lineHeight: 1.1,
-        border: '1px solid rgba(0,0,0,0.08)',
-        position: 'relative',
-        zIndex: 1,
-        gap: 8,
-        alignItems: 'center',
-        maxWidth: '100%',               // no se pasa del ancho de la celda
-        overflow: 'hidden',             // corta exceso
-        textOverflow: 'ellipsis',       // agrega “…” si no entra
-        display: '-webkit-box',
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: 'vertical',
-        whiteSpace: 'normal',
-    };
-    return <div style={style}><ImanContent iman={iman} restantes={restantes} /></div>;
+    return <div className={styles.iman} style={{ ['--bg' as any]: iman.color ?? '#e5e7eb' }}><ImanContent iman={iman} restantes={restantes} /></div>;
 }
 
 function DraggableIman({ iman, restantes, dragId }: DraggableProps) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: dragId ?? iman.id });
-
-    const style: CSSProperties = {
-        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-        cursor: 'grab',
-        padding: '8px 10px',
-        borderRadius: 10,
-        background: iman.color ?? '#e5e7eb',
-        color: '#111827',
-        boxShadow: isDragging ? '0 6px 20px rgba(0,0,0,0.2)' : '0 1px 4px rgba(0,0,0,0.12)',
-        userSelect: 'none',
-        fontSize: 14,
-        lineHeight: 1.1,
-        border: '1px solid rgba(0,0,0,0.08)',
-        position: 'relative',
+    const transformStyle = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
+    const overlayStyle = {
         zIndex: isDragging ? 9999 : 1,
-        gap: 8,
-        alignItems: 'center',
-        maxWidth: '100%',               // no se pasa del ancho de la celda
-        overflow: 'hidden',             // corta exceso
-        textOverflow: 'ellipsis',       // agrega “…” si no entra
-        display: '-webkit-box',
-        WebkitLineClamp: 2, 
-        WebkitBoxOrient: 'vertical',
-        whiteSpace: 'normal',
-    };
+        boxShadow: isDragging ? '0 6px 20px rgba(0,0,0,0.2)' : undefined,
+        cursor: 'grab',
+    } as React.CSSProperties;
 
     return (
-        <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+        <div ref={setNodeRef} style={{ ...transformStyle, ...overlayStyle, ['--bg' as any]: iman.color ?? '#e5e7eb' }} className={styles.iman} {...listeners} {...attributes}>
             <ImanContent iman={iman} restantes={restantes} />
         </div>
     );
@@ -184,12 +129,12 @@ export default function Iman(props: BaseProps & { draggable?: boolean }) {
     // Render compact label; on double-click open centered modal.
     return (
         <>
-            <div style={{ position: 'relative' }} onDoubleClick={() => setExpanded(true)}>{content}</div>
+            <div className={styles.root} onDoubleClick={() => setExpanded(true)}>{content}</div>
 
             {(expanded || editing) && (
                 // Backdrop covers full viewport. If editing is true, clicking backdrop does nothing.
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onMouseDown={() => { if (!editing) setExpanded(false); }}>
-                    <div role="dialog" aria-modal="true" onMouseDown={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 10, width: 520, maxWidth: '92%', boxShadow: '0 12px 48px rgba(0,0,0,0.5)' }}>
+                <div className={styles.backdrop} onMouseDown={() => { if (!editing) setExpanded(false); }}>
+                    <div role="dialog" aria-modal="true" onMouseDown={e => e.stopPropagation()} className={styles.modal}>
                         {editing ? (
                             // When the editor closes, also close the expanded preview for smoother UX
                             <ImanEditor iman={props.iman} onCancel={() => { setEditing(false); setExpanded(false); }} />

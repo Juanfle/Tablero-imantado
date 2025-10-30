@@ -1,0 +1,94 @@
+.grid {
+  display: grid;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.headerCell {
+  background: #f9fafb;
+  padding: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.bandejaSection {
+  margin-bottom: 16px;
+}
+
+.bandejaTitle {
+  margin: 10px 0;
+}
+
+.bandejaList {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin-bottom: 10px;
+}
+
+.celda {
+  min-height: 86px; /* igual que CELL_HEIGHT en TSX */
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  background: #fff;
+}
+
+.celdaHover {
+  background: #fef3c7;
+}
+
+.rowContents {
+  display: contents;
+}
+
+.rowHeader {
+  background: #f9fafb;
+  padding: 10px;
+  font-weight: 500;
+}
+
+.celdaLabel {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+.removeBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 14px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.message {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.dragOverlay {
+  z-index: 99999;
+  pointer-events: none;
+}

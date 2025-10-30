@@ -1,5 +1,11 @@
 export type Dia = 'Lun' | 'Mar' | 'Mié' | 'Jue' | 'Vie';
-export type Bloque = '1º' | '2º' | '3º' | '4º' | '5º' | '6º';
+export type Bloque =
+    | '7:20 a 8:20'
+    | '8:30 a 9:30'
+    | '9:40 a 10:40'
+    | '10:50 a 11:50'
+    | '12:00 a 13:00'
+    | '13:00 a 14:00';
 
 export interface Iman {
     id: string;
