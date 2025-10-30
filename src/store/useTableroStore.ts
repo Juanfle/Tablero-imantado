@@ -8,6 +8,7 @@ interface TableroState {
     imanes: Iman[];
     posiciones: Posicion[];
     reset: () => void;
+    addIman: (iman: Omit<Iman, 'id'>) => string;
     ubicarIman: (imanId: string, dia: Dia, bloque: Bloque) => { ok: boolean; reason?: string };
     removerImanEn: (dia: Dia, bloque: Bloque) => void;
     usadosDe: (imanId: string) => number;
@@ -18,6 +19,7 @@ interface TableroState {
         toBloque: Bloque
     ) => { ok: boolean; reason?: string };
     updateIman: (imanId: string, patch: Partial<Iman>) => void;
+    deleteIman: (imanId: string) => void;
 }
 
 
@@ -93,6 +95,21 @@ export const useTableroStore = create<TableroState>()(
                 const { imanes } = get();
                 const siguientes = imanes.map(i => (i.id === imanId ? { ...i, ...patch } : i));
                 set({ imanes: siguientes });
+            },
+
+            addIman: (iman) => {
+                const { imanes } = get();
+                // generar id simple y único
+                const slug = (iman.materia || 'iman').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                const id = `${slug}-${Date.now()}`;
+                const nuevo: Iman = { id, ...iman } as Iman;
+                set({ imanes: [...imanes, nuevo] });
+                return id;
+            },
+
+            deleteIman: (imanId) => {
+                const { imanes, posiciones } = get();
+                set({ imanes: imanes.filter(i => i.id !== imanId), posiciones: posiciones.filter(p => p.imanId !== imanId) });
             },
 
         }),

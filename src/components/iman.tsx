@@ -12,6 +12,27 @@ function ImanEditor({ iman, onCancel }: { iman: ImanType; onCancel: () => void }
     const [rol, setRol] = useState<ImanType['rol']>(iman.rol);
     const [docente2, setDocente2] = useState(iman.docente2 ?? '');
     const [modulos, setModulos] = useState(String(iman.modulos));
+    const [color, setColor] = useState(iman.color ?? '#FDE68A');
+
+    // Paleta de colores pastel
+    const PALETTE = [
+        '#FDE68A', // amarillo pastel
+        '#FBCFE8', // rosa pastel
+        '#C7F9CC', // verde pastel
+        '#BFDBFE', // celeste pastel
+        '#FECACA', // salmón claro
+        '#E6E6FA', // lavanda
+        '#FFE7C7', // durazno claro
+        '#D1FAE5', // verde suave
+        '#FFD6E8', // rosa bebé
+        '#B5EAD7', // verde menta fría
+        '#FFDFBA', // durazno pastel más cálido
+        '#C6E2FF', // azul cielo pálido
+        '#E0BBE4', // violeta suave medio
+        '#F9E2AF', // amarillo crema
+        '#D7E3FC', // azul lavanda claro
+        '#E2F0CB'  // verde lima apagado
+    ];
 
     const save = () => {
         const patch: Partial<ImanType> = {
@@ -23,6 +44,7 @@ function ImanEditor({ iman, onCancel }: { iman: ImanType; onCancel: () => void }
             docente2: docente2.trim() ? docente2.trim() : undefined,
             rol2: docente2.trim() ? 'Suplente' : undefined,
             modulos: Number(modulos) || 0,
+            color: color || undefined,
         };
         updateIman(iman.id, patch);
         onCancel();
@@ -45,6 +67,25 @@ function ImanEditor({ iman, onCancel }: { iman: ImanType; onCancel: () => void }
 
             <div className={styles.singleColumn}>
                 <input className={styles.input} value={docente2} onChange={e => setDocente2(e.target.value)} placeholder="Suplente (opcional)" />
+            </div>
+
+            {/* Palette */}
+            <div style={{ marginTop: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div className={styles.paletteLabel}>Color:</div>
+                    <div className={styles.palette}>
+                        {PALETTE.map((c) => (
+                            <button
+                                key={c}
+                                type="button"
+                                className={`${styles.swatch} ${color === c ? styles.swatchSelected : ''}`}
+                                onClick={() => setColor(c)}
+                                style={{ background: c }}
+                                aria-label={`Seleccionar color ${c}`}
+                            />
+                        ))}
+                    </div>
+                </div>
             </div>
 
             <div className={styles.actions}>
@@ -79,7 +120,7 @@ function ImanContent({ iman, restantes }: BaseProps) {
     );
 }
 
-function ExpandedImanView({ iman, onEdit, onClose, disableClose }: { iman: ImanType; restantes?: number; onEdit: () => void; onClose: () => void; disableClose?: boolean }) {
+function ExpandedImanView({ iman, onEdit, onClose, onDelete, disableClose }: { iman: ImanType; restantes?: number; onEdit: () => void; onClose: () => void; onDelete?: () => void; disableClose?: boolean }) {
     return (
         <div className={styles.expandedInner}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -92,6 +133,9 @@ function ExpandedImanView({ iman, onEdit, onClose, disableClose }: { iman: ImanT
                 </div>
                 <div className={styles.actions}>
                     <button onClick={onEdit} className={`${styles.btn} ${styles.btnPrimary}`}>Editar</button>
+                    {onDelete && (
+                        <button onClick={onDelete} className={`${styles.btn} ${styles.btnNeutral}`} style={{ background: '#fee2e2', color: '#991b1b' }}>Eliminar</button>
+                    )}
                     <button disabled={disableClose} onClick={onClose} className={`${styles.btn} ${styles.btnNeutral}`} style={{ opacity: disableClose ? 0.5 : 1, cursor: disableClose ? 'not-allowed' : 'pointer' }}>{disableClose ? 'Cerrar (bloqueado)' : 'Cerrar'}</button>
                 </div>
             </div>
@@ -123,8 +167,18 @@ function DraggableIman({ iman, restantes, dragId }: DraggableProps) {
 export default function Iman(props: BaseProps & { draggable?: boolean }) {
     const [editing, setEditing] = useState(false);
     const [expanded, setExpanded] = useState(false);
+    const deleteIman = useTableroStore(s => s.deleteIman);
     // evitar que el editor abra el drag; abrimos la vista expandida con doble-click
     const content = props.draggable ? <DraggableIman {...props} /> : <ImanStatic {...props} />;
+
+    const handleDelete = () => {
+        if (!props.iman) return;
+        const ok = window.confirm(`Eliminar imán "${props.iman.materia}"? Esta acción quitará el imán y todas sus ubicaciones.`);
+        if (!ok) return;
+        deleteIman(props.iman.id);
+        setExpanded(false);
+        setEditing(false);
+    };
 
     // Render compact label; on double-click open centered modal.
     return (
@@ -139,7 +193,7 @@ export default function Iman(props: BaseProps & { draggable?: boolean }) {
                             // When the editor closes, also close the expanded preview for smoother UX
                             <ImanEditor iman={props.iman} onCancel={() => { setEditing(false); setExpanded(false); }} />
                         ) : (
-                            <ExpandedImanView iman={props.iman} restantes={props.restantes} onEdit={() => setEditing(true)} onClose={() => { if (!editing) setExpanded(false); }} disableClose={editing} />
+                            <ExpandedImanView iman={props.iman} restantes={props.restantes} onEdit={() => setEditing(true)} onClose={() => { if (!editing) setExpanded(false); }} onDelete={handleDelete} disableClose={editing} />
                         )}
                     </div>
                 </div>

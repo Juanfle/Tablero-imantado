@@ -35,7 +35,7 @@ function Celda({
 }
 
 export default function Tablero() {
-    const { imanes, posiciones, ubicarIman, removerImanEn, moverIman } = useTableroStore();
+    const { imanes, posiciones, ubicarIman, removerImanEn, moverIman, addIman } = useTableroStore();
     const [mensaje, setMensaje] = useState<string | null>(null);
     // Etiqueta del año que aparecerá en la celda superior-izquierda
     const ANIO_LABEL = '1° año';
@@ -59,16 +59,27 @@ export default function Tablero() {
 
     const bandeja = imanes.filter((i) => restantesDe(i.id) > 0);
     const [activeIman, setActiveIman] = useState<ImanModel | null>(null);
+    // Estados para crear nuevo imán
+    const [showCreate, setShowCreate] = useState(false);
+    const [newMateria, setNewMateria] = useState('');
+    const [newDocente, setNewDocente] = useState('');
+    const [newModulos, setNewModulos] = useState('1');
+    const [newRol, setNewRol] = useState<ImanModel['rol']>('Titular');
+    const [newColor, setNewColor] = useState('#FDE68A');
 
     const onDragStart = (e: DragStartEvent) => {
         const activeId = String(e.active.id);
-        const imanId = activeId.startsWith('placed:')
-            ? activeId.split(':')[1].split('|')[0]
-            : activeId;
+        let imanId: string;
+        if (activeId.startsWith('placed:')) {
+            const payload = activeId.slice('placed:'.length); // preserve any ':' inside the bloque
+            imanId = payload.split('|')[0];
+        } else {
+            imanId = activeId;
+        }
 
         const iman = imanes.find(i => i.id === imanId) ?? null;
         setActiveIman(iman);
-        };
+    };
 
         const onDragEnd = (e: DragEndEvent) => {
         setActiveIman(null);
@@ -83,7 +94,9 @@ export default function Tablero() {
             return;
         }
 
-        const [, payload] = activeId.split(':');
+        // when id is like `placed:<imanId>|<dia>|<bloque>` we must only strip the first `placed:` prefix
+        // and NOT split by ':' because the bloque contains ':' (times). Use slice to preserve payload intact.
+        const payload = activeId.slice('placed:'.length);
         const [/*imanId*/, fromDia, fromBloque] = payload.split('|') as [string, Dia, Bloque];
         const [toDia, toBloque] = overId.split('|') as [Dia, Bloque];
         const { ok, reason } = moverIman(fromDia, fromBloque, toDia, toBloque);
@@ -103,7 +116,33 @@ export default function Tablero() {
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
                 {/* Bandeja de imanes con módulos restantes */}
                 <section className={tstyles.bandejaSection}>
-                    <h3 className={tstyles.bandejaTitle}>Imanes disponibles</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h3 className={tstyles.bandejaTitle}>Imanes disponibles</h3>
+                        <div>
+                            <button onClick={() => setShowCreate(s => !s)} style={{ marginRight: 8 }}>{showCreate ? 'Cancelar' : 'Nuevo imán'}</button>
+                        </div>
+                    </div>
+
+                    {showCreate && (
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0' }}>
+                            <input placeholder="Materia" value={newMateria} onChange={e => setNewMateria(e.target.value)} style={{ padding: 6 }} />
+                            <input placeholder="Docente" value={newDocente} onChange={e => setNewDocente(e.target.value)} style={{ padding: 6 }} />
+                            <input placeholder="Módulos" value={newModulos} onChange={e => setNewModulos(e.target.value)} style={{ width: 72, padding: 6 }} />
+                            <select value={newRol} onChange={e => setNewRol(e.target.value as any)} style={{ padding: 6 }}>
+                                <option value="Titular">Titular</option>
+                                <option value="Provisional">Provisional</option>
+                                <option value="Suplente">Suplente</option>
+                            </select>
+                            <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)} title="Color" style={{ width: 44, height: 36, border: 'none', padding: 0 }} />
+                            <button onClick={() => {
+                                if (!newMateria.trim()) { setMensaje('La materia no puede estar vacía'); return; }
+                                const id = addIman({ materia: newMateria.trim(), docente: newDocente.trim() || '---', rol: newRol, modulos: Number(newModulos) || 1, color: newColor });
+                                setMensaje(`Imán creado (${id})`);
+                                setNewMateria(''); setNewDocente(''); setNewModulos('1'); setShowCreate(false);
+                            }}>Agregar</button>
+                        </div>
+                    )}
+
                     <div className={tstyles.bandejaList}>
                         {bandeja.map((iman) => (
                             <Iman key={iman.id} iman={iman} restantes={restantesDe(iman.id)} draggable />
