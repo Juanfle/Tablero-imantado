@@ -5,7 +5,7 @@ import type { Iman as ImanType } from '../types';
 import { useTableroStore } from '../store/useTableroStore';
 
 // Editor sencillo embebido para editar un imán
-export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanType; onCancel: () => void; isNew?: boolean; onCreate?: (data: Omit<ImanType, 'id'>) => void }) {
+export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanType; onCancel: () => void; isNew?: boolean; onCreate?: (data: Omit<ImanType, 'id' | 'anio'>) => void }) {
     const updateIman = useTableroStore(s => s.updateIman);
     const [materia, setMateria] = useState(iman?.materia ?? '');
     const [docente, setDocente] = useState(iman?.docente ?? '');
@@ -47,7 +47,7 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
             color: color || undefined,
         };
         if (isNew && onCreate) {
-            const data: Omit<ImanType, 'id'> = {
+            const data: Omit<ImanType, 'id' | 'anio'> = {
                 materia: patch.materia ?? '',
                 docente: patch.docente ?? '',
                 rol: (patch.rol as ImanType['rol']) ?? 'Tit',

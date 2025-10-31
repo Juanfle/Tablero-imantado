@@ -1,4 +1,5 @@
 export type Dia = 'Lun' | 'Mar' | 'Mié' | 'Jue' | 'Vie';
+export type Anio = 1 | 2 | 3 | 4 | 5 | 6;
 export type Bloque =
     | '7:20 a 8:20'
     | '8:30 a 9:30'
@@ -17,6 +18,7 @@ export interface Iman {
     rol2?: 'Tit' | 'Prov' | 'Sup';
     color?: string;
     modulos: number;
+    anio: Anio;
 }
 
 export interface Posicion {
@@ -24,4 +26,5 @@ export interface Posicion {
     dia: Dia;
     bloque: Bloque;
     aula?: string;
+    anio: Anio;
 }
