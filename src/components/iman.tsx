@@ -9,7 +9,7 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
     const updateIman = useTableroStore(s => s.updateIman);
     const [materia, setMateria] = useState(iman?.materia ?? '');
     const [docente, setDocente] = useState(iman?.docente ?? '');
-    const [rol, setRol] = useState<ImanType['rol']>(iman?.rol ?? 'Titular');
+    const [rol, setRol] = useState<ImanType['rol']>(iman?.rol ?? 'Tit');
     const [docente2, setDocente2] = useState(iman?.docente2 ?? '');
     const [modulos, setModulos] = useState(String(iman?.modulos ?? 1));
     const [color, setColor] = useState(iman?.color ?? '#FDE68A');
@@ -38,11 +38,11 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
         const patch: Partial<ImanType> = {
             materia: materia.trim(),
             docente: docente.trim(),
-            // primary role must be Titular or Provisional
+            // primary role must be Tit or Prov
             rol,
             // If there's a secondary teacher, it is always a Suplente
             docente2: docente2.trim() ? docente2.trim() : undefined,
-            rol2: docente2.trim() ? 'Suplente' : undefined,
+            rol2: docente2.trim() ? 'Sup' : undefined,
             modulos: Number(modulos) || 0,
             color: color || undefined,
         };
@@ -50,7 +50,7 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
             const data: Omit<ImanType, 'id'> = {
                 materia: patch.materia ?? '',
                 docente: patch.docente ?? '',
-                rol: (patch.rol as ImanType['rol']) ?? 'Titular',
+                rol: (patch.rol as ImanType['rol']) ?? 'Tit',
                 docente2: patch.docente2,
                 rol2: patch.rol2,
                 modulos: patch.modulos ?? 1,
@@ -73,17 +73,17 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
                 <input className={styles.input} value={materia} onChange={e => setMateria(e.target.value)} placeholder="Materia" />
                 <input className={styles.input} value={modulos} onChange={e => setModulos(e.target.value)} placeholder="Módulos" />
                 <input className={styles.input} value={docente} onChange={e => setDocente(e.target.value)} placeholder="Docente principal" />
-                {/* primary role: only Titular or Provisional */}
+                {/* primary role: only Tit or Prov */}
                 <select className={styles.input} value={rol} onChange={e => setRol(e.target.value as ImanType['rol'])}>
-                    <option value="Titular">Titular</option>
-                    <option value="Provisional">Provisional</option>
+                    <option value="Tit">Tit</option>
+                    <option value="Prov">Prov</option>
                 </select>
             </div>
 
             <hr className={styles.hr} />
 
             <div className={styles.singleColumn}>
-                <input className={styles.input} value={docente2} onChange={e => setDocente2(e.target.value)} placeholder="Suplente (opcional)" />
+                <input className={styles.input} value={docente2} onChange={e => setDocente2(e.target.value)} placeholder="Sup (opcional)" />
             </div>
 
             {/* Palette */}
@@ -123,13 +123,17 @@ interface DraggableProps extends BaseProps {}
 function ImanContent({ iman, restantes }: BaseProps) {
     // Compact display: if there's a secondary teacher with role 'Suplente',
     // show the suplente only in the compact label. Otherwise show the primary teacher (as before).
-    const showSuplenteCompact = !!(iman.docente2 && iman.rol2 === 'Suplente');
+    const showSuplenteCompact = !!(iman.docente2 && iman.rol2 === 'Sup');
     const teacherName = showSuplenteCompact ? iman.docente2! : iman.docente;
     const teacherRole = showSuplenteCompact ? iman.rol2 : iman.rol;
 
+    const TRUNCATE_LEN = 16; // configurable: número máximo de caracteres para mostrar en la vista compacta
+    const truncate = (s: string, n = TRUNCATE_LEN) => (s.length > n ? s.slice(0, n).trimEnd() + '...' : s);
+    const displayMateria = truncate(iman.materia, TRUNCATE_LEN);
+
     return (
         <>
-            <strong>{iman.materia}</strong> — {teacherName} <em>({teacherRole})</em>
+            <strong title={iman.materia}>{displayMateria}</strong> — {teacherName} <em>({teacherRole})</em>
             {typeof restantes === 'number' && (
                 <span title="Módulos restantes" className={styles.restantes}>{restantes}</span>
             )}

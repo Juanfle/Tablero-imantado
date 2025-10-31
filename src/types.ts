@@ -11,10 +11,10 @@ export interface Iman {
     id: string;
     materia: string;
     docente: string;
-    rol: 'Titular' | 'Provisional' | 'Suplente';
+    rol: 'Tit' | 'Prov' | 'Sup';
     // opcional: segundo profesor relacionado (ej: suplente)
     docente2?: string;
-    rol2?: 'Titular' | 'Provisional' | 'Suplente';
+    rol2?: 'Tit' | 'Prov' | 'Sup';
     color?: string;
     modulos: number;
 }
