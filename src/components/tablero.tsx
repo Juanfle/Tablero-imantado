@@ -153,6 +153,7 @@ export default function Tablero() {
 
                     {/* Filas */}
                     {BLOQUES.map((b) => (
+                        <>
                         <div key={`fila-${b}`} className={tstyles.rowContents}>
                             <div className={tstyles.rowHeader}>{b}</div>
                             {DIAS.map((d) => {
@@ -175,6 +176,11 @@ export default function Tablero() {
                                 );
                             })}
                         </div>
+                        {/* insert separator after the 4th bloque (index 3) to mark comedor between 10:50-11:50 and 12:00-13:00 */}
+                        {b === '10:50 a 11:50' && (
+                            <div key={`sep-${b}`} className={tstyles.separator} aria-hidden="true">COMEDOR</div>
+                        )}
+                        </>
                     ))}
                 </div>
                 <DragOverlay dropAnimation={null}>

@@ -127,13 +127,14 @@ function ImanContent({ iman, restantes }: BaseProps) {
     const teacherName = showSuplenteCompact ? iman.docente2! : iman.docente;
     const teacherRole = showSuplenteCompact ? iman.rol2 : iman.rol;
 
-    const TRUNCATE_LEN = 16; // configurable: número máximo de caracteres para mostrar en la vista compacta
+    const TRUNCATE_LEN = 12; // configurable: número máximo de caracteres para mostrar en la vista compacta
     const truncate = (s: string, n = TRUNCATE_LEN) => (s.length > n ? s.slice(0, n).trimEnd() + '...' : s);
     const displayMateria = truncate(iman.materia, TRUNCATE_LEN);
+    const displayTeacher = truncate(teacherName, TRUNCATE_LEN);
 
     return (
         <>
-            <strong title={iman.materia}>{displayMateria}</strong> — {teacherName} <em>({teacherRole})</em>
+            <strong title={iman.materia}>{displayMateria}</strong> — <span title={teacherName}>{displayTeacher}</span> <em>({teacherRole})</em>
             {typeof restantes === 'number' && (
                 <span title="Módulos restantes" className={styles.restantes}>{restantes}</span>
             )}
@@ -176,6 +177,7 @@ function DraggableIman({ iman, restantes, dragId }: DraggableProps) {
         zIndex: isDragging ? 9999 : 1,
         boxShadow: isDragging ? '0 6px 20px rgba(0,0,0,0.2)' : undefined,
         cursor: 'grab',
+        opacity: isDragging ? 0 : 1,
     } as React.CSSProperties;
 
     return (
