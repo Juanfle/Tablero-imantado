@@ -12,7 +12,7 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { BLOQUES, DIAS } from '../data';
 import type { Dia, Bloque, Iman as ImanModel } from '../types';
 import { useTableroStore } from '../store/useTableroStore';
-import Iman from './iman';
+import Iman, { ImanEditor } from './iman';
 
 function Celda({
     dia,
@@ -59,13 +59,8 @@ export default function Tablero() {
 
     const bandeja = imanes.filter((i) => restantesDe(i.id) > 0);
     const [activeIman, setActiveIman] = useState<ImanModel | null>(null);
-    // Estados para crear nuevo imán
+    // Estados para crear nuevo imán (usaremos modal con ImanEditor)
     const [showCreate, setShowCreate] = useState(false);
-    const [newMateria, setNewMateria] = useState('');
-    const [newDocente, setNewDocente] = useState('');
-    const [newModulos, setNewModulos] = useState('1');
-    const [newRol, setNewRol] = useState<ImanModel['rol']>('Titular');
-    const [newColor, setNewColor] = useState('#FDE68A');
 
     const onDragStart = (e: DragStartEvent) => {
         const activeId = String(e.active.id);
@@ -123,32 +118,28 @@ export default function Tablero() {
                         </div>
                     </div>
 
-                    {showCreate && (
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0' }}>
-                            <input placeholder="Materia" value={newMateria} onChange={e => setNewMateria(e.target.value)} style={{ padding: 6 }} />
-                            <input placeholder="Docente" value={newDocente} onChange={e => setNewDocente(e.target.value)} style={{ padding: 6 }} />
-                            <input placeholder="Módulos" value={newModulos} onChange={e => setNewModulos(e.target.value)} style={{ width: 72, padding: 6 }} />
-                            <select value={newRol} onChange={e => setNewRol(e.target.value as any)} style={{ padding: 6 }}>
-                                <option value="Titular">Titular</option>
-                                <option value="Provisional">Provisional</option>
-                                <option value="Suplente">Suplente</option>
-                            </select>
-                            <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)} title="Color" style={{ width: 44, height: 36, border: 'none', padding: 0 }} />
-                            <button onClick={() => {
-                                if (!newMateria.trim()) { setMensaje('La materia no puede estar vacía'); return; }
-                                const id = addIman({ materia: newMateria.trim(), docente: newDocente.trim() || '---', rol: newRol, modulos: Number(newModulos) || 1, color: newColor });
-                                setMensaje(`Imán creado (${id})`);
-                                setNewMateria(''); setNewDocente(''); setNewModulos('1'); setShowCreate(false);
-                            }}>Agregar</button>
-                        </div>
-                    )}
-
                     <div className={tstyles.bandejaList}>
                         {bandeja.map((iman) => (
                             <Iman key={iman.id} iman={iman} restantes={restantesDe(iman.id)} draggable />
                         ))}
                     </div>
                 </section>
+
+                {/* When showCreate is true, open the shared editor modal to create a new iman */}
+                {showCreate && (
+                    <div className={tstyles.createBackdrop} onMouseDown={() => setShowCreate(false)}>
+                        <div role="dialog" aria-modal="true" onMouseDown={e => e.stopPropagation()} className={tstyles.modal}>
+                            <ImanEditor
+                                isNew
+                                onCancel={() => setShowCreate(false)}
+                                onCreate={(data) => {
+                                    const id = addIman(data);
+                                    setMensaje(`Imán creado (${id})`);
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Grilla Días × Bloques */}
                 <div className={tstyles.grid} style={{ gridTemplateColumns: `120px repeat(${DIAS.length}, 1fr)` }}>

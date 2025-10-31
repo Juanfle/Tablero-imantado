@@ -59,7 +59,6 @@
 .modal {
   background: #fff;
   border-radius: 10px;
-  width: 520px;
   max-width: 92%;
   box-shadow: 0 12px 48px rgba(0,0,0,0.5);
 }
@@ -70,8 +69,11 @@
 
 .editor {
   padding: 16px;
-  width: 480px;
+  width: 100%;
+  max-width: 480px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .formGrid {
@@ -170,4 +172,26 @@
 
 .btnNeutral {
   background: #f3f4f6;
+}
+
+/* Responsive: en pantallas chicas, la grilla se vuelve columna única y el modal se ajusta */
+@media (max-width: 560px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  .editor {
+    padding: 12px;
+    max-width: 92vw;
+  }
+  .modal {
+    max-height: 92vh;
+    overflow: auto;
+    margin: 8px;
+  }
+  .actions {
+    flex-direction: column-reverse;
+  }
+  .btn {
+    width: 100%;
+  }
 }

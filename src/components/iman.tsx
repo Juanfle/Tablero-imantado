@@ -5,14 +5,14 @@ import type { Iman as ImanType } from '../types';
 import { useTableroStore } from '../store/useTableroStore';
 
 // Editor sencillo embebido para editar un imán
-function ImanEditor({ iman, onCancel }: { iman: ImanType; onCancel: () => void }) {
+export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanType; onCancel: () => void; isNew?: boolean; onCreate?: (data: Omit<ImanType, 'id'>) => void }) {
     const updateIman = useTableroStore(s => s.updateIman);
-    const [materia, setMateria] = useState(iman.materia);
-    const [docente, setDocente] = useState(iman.docente);
-    const [rol, setRol] = useState<ImanType['rol']>(iman.rol);
-    const [docente2, setDocente2] = useState(iman.docente2 ?? '');
-    const [modulos, setModulos] = useState(String(iman.modulos));
-    const [color, setColor] = useState(iman.color ?? '#FDE68A');
+    const [materia, setMateria] = useState(iman?.materia ?? '');
+    const [docente, setDocente] = useState(iman?.docente ?? '');
+    const [rol, setRol] = useState<ImanType['rol']>(iman?.rol ?? 'Titular');
+    const [docente2, setDocente2] = useState(iman?.docente2 ?? '');
+    const [modulos, setModulos] = useState(String(iman?.modulos ?? 1));
+    const [color, setColor] = useState(iman?.color ?? '#FDE68A');
 
     // Paleta de colores pastel
     const PALETTE = [
@@ -46,7 +46,24 @@ function ImanEditor({ iman, onCancel }: { iman: ImanType; onCancel: () => void }
             modulos: Number(modulos) || 0,
             color: color || undefined,
         };
-        updateIman(iman.id, patch);
+        if (isNew && onCreate) {
+            const data: Omit<ImanType, 'id'> = {
+                materia: patch.materia ?? '',
+                docente: patch.docente ?? '',
+                rol: (patch.rol as ImanType['rol']) ?? 'Titular',
+                docente2: patch.docente2,
+                rol2: patch.rol2,
+                modulos: patch.modulos ?? 1,
+                color: patch.color,
+            };
+            onCreate(data);
+            onCancel();
+            return;
+        }
+
+        if (iman) {
+            updateIman(iman.id, patch);
+        }
         onCancel();
     };
 
