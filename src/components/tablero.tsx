@@ -128,7 +128,7 @@ export default function Tablero() {
                             </div>
 
                             <div className={tstyles.bandejaList} style={{ marginBottom: 8 }}>
-                                {imanesForYear.map((iman) => (
+                                {imanesForYear.filter(i => restantesDe(i.id) > 0).map((iman) => (
                                     <Iman key={iman.id} iman={iman} restantes={restantesDe(iman.id)} draggable />
                                 ))}
                             </div>
