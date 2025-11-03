@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import tstyles from './Tablero.module.css';
 import {
     DndContext,
@@ -95,9 +96,83 @@ export default function Tablero() {
         setMensaje(ok ? null : reason ?? null);
     };
 
+    const printRef = useRef<HTMLDivElement | null>(null);
+
+    const handlePrint = useReactToPrint({
+        content: () => printRef.current,
+        documentTitle: 'Horarios',
+        copyStyles: true,
+    });
+
+    const printViaTemporaryWrapper = () => {
+        const content = printRef.current;
+        if (!content) {
+            window.print();
+            return;
+        }
+
+        // create wrapper and style that hides everything except the wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'temp-print-wrapper';
+        wrapper.setAttribute('data-temp-print', '1');
+        wrapper.appendChild(content.cloneNode(true));
+
+        const styleEl = document.createElement('style');
+        styleEl.setAttribute('data-temp-print-style', '1');
+        styleEl.textContent = `
+            body > *:not(.temp-print-wrapper) { display: none !important; }
+            .temp-print-wrapper { display: block !important; }
+            @page { size: A4 landscape; margin: 8mm; }
+        `;
+
+        document.head.appendChild(styleEl);
+        document.body.appendChild(wrapper);
+
+        // give browser a tick to render the new DOM
+        setTimeout(() => {
+            try {
+                window.print();
+            } finally {
+                // cleanup after a short delay to ensure print dialog has captured content
+                setTimeout(() => {
+                    try { wrapper.remove(); } catch (e) {}
+                    try { styleEl.remove(); } catch (e) {}
+                }, 500);
+            }
+        }, 60);
+    };
+
     return (
-        <div>
-            <h2 className={tstyles.title}>Pizarras por año</h2>
+        <div className={tstyles.appRoot}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 className={tstyles.title}>Pizarras por año</h2>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <button
+                        onClick={() => {
+                            // show a short UI hint so we know the click fired
+                            setMensaje('Abriendo diálogo de impresión...');
+                            try {
+                                // prefer react-to-print, but for Edge use the wrapper fallback
+                                const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+                                const isEdge = ua.includes('Edg') || ua.includes('Edge');
+                                if (isEdge) {
+                                    printViaTemporaryWrapper();
+                                } else if (typeof handlePrint === 'function') {
+                                    handlePrint();
+                                } else {
+                                    window.print();
+                                }
+                            } catch (err) {
+                                window.print();
+                            }
+                            // clear hint after a short delay
+                            setTimeout(() => setMensaje(null), 2000);
+                        }}
+                        className={tstyles.noPrint}
+                    >Imprimir todos</button>
+                    
+                </div>
+            </div>
 
             {mensaje && (
                 <div className={tstyles.message}>{mensaje}</div>
@@ -199,6 +274,48 @@ export default function Tablero() {
                     ) : null}
                 </DragOverlay>
             </DndContext>
+
+            {/* print-only area: one table per page (monochrome). Hidden on screen, visible on print via CSS */}
+            <div ref={printRef} className={tstyles.printArea} aria-hidden="true">
+                {ANIOS.map((anio) => {
+                    const imanesForYear = imanes.filter(i => (i.anio ?? 3) === anio);
+                    const posicionesForYear = posiciones.filter(p => p.anio === anio);
+                    return (
+                        <div key={`print-${anio}`} className={tstyles.printPage}>
+                            <div className={tstyles.printHeader}>{`${anio}° año`}</div>
+                            <table className={tstyles.printTable}>
+                                <thead>
+                                    <tr>
+                                        <th className={tstyles.printBloc}></th>
+                                        {DIAS.map(d => (<th key={`h-${anio}-${d}`}>{d}</th>))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {BLOQUES.map(b => (
+                                        <tr key={`r-${anio}-${b}`}>
+                                            <td className={tstyles.printBloc}>{b}</td>
+                                            {DIAS.map(d => {
+                                                const pos = posicionesForYear.find(p => p.dia === d && p.bloque === b);
+                                                const iman = pos ? imanesForYear.find(i => i.id === pos.imanId) : undefined;
+                                                if (!iman) return <td key={`${anio}-${b}-${d}`}><div className="printCellInner"></div></td>;
+                                                const teacher = iman.docente2 && iman.rol2 === 'Sup' ? iman.docente2 : iman.docente;
+                                                return (
+                                                    <td key={`${anio}-${b}-${d}`}>
+                                                        <div className="printCellInner">
+                                                            <div className="printSubject"><strong>{iman.materia}</strong></div>
+                                                            <div className="printTeacher">{teacher}</div>
+                                                        </div>
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }
