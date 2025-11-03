@@ -67,6 +67,14 @@
   padding: 12px;
 }
 
+.expandedHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px; /* separation between left info and action buttons */
+  margin-bottom: 12px;
+}
+
 .editor {
   padding: 16px;
   width: 100%;
@@ -89,6 +97,13 @@
   border-radius: 6px;
   border: 1px solid #ddd;
   box-sizing: border-box;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  color: rgba(0,0,0,0.6);
+  margin-bottom: 6px;
 }
 
 .note {

@@ -70,19 +70,35 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
     return (
         <div className={styles.editor}>
             <div className={styles.formGrid}>
-                <input className={styles.input} value={materia} onChange={e => setMateria(e.target.value)} placeholder="Materia" />
-                <input className={styles.input} value={modulos} onChange={e => setModulos(e.target.value)} placeholder="Módulos" />
-                <input className={styles.input} value={docente} onChange={e => setDocente(e.target.value)} placeholder="Docente principal" />
-                {/* primary role: only Tit or Prov */}
-                <select className={styles.input} value={rol} onChange={e => setRol(e.target.value as ImanType['rol'])}>
-                    <option value="Tit">Tit</option>
-                    <option value="Prov">Prov</option>
-                </select>
+                <div>
+                    <label className={styles.label}>Materia</label>
+                    <input className={styles.input} value={materia} onChange={e => setMateria(e.target.value)} placeholder="Materia" />
+                </div>
+
+                <div>
+                    <label className={styles.label}>Módulos</label>
+                    <input className={styles.input} value={modulos} onChange={e => setModulos(e.target.value)} placeholder="Módulos" />
+                </div>
+
+                <div>
+                    <label className={styles.label}>Docente</label>
+                    <input className={styles.input} value={docente} onChange={e => setDocente(e.target.value)} placeholder="Docente principal" />
+                </div>
+
+                <div>
+                    <label className={styles.label}>Situación de revista</label>
+                    {/* primary role: only Tit or Prov */}
+                    <select className={styles.input} value={rol} onChange={e => setRol(e.target.value as ImanType['rol'])}>
+                        <option value="Tit">Tit</option>
+                        <option value="Prov">Prov</option>
+                    </select>
+                </div>
             </div>
 
             <hr className={styles.hr} />
 
             <div className={styles.singleColumn}>
+                <label className={styles.label}>Suplente (opcional)</label>
                 <input className={styles.input} value={docente2} onChange={e => setDocente2(e.target.value)} placeholder="Sup (opcional)" />
             </div>
 
@@ -145,7 +161,7 @@ function ImanContent({ iman, restantes }: BaseProps) {
 function ExpandedImanView({ iman, onEdit, onClose, onDelete, disableClose }: { iman: ImanType; restantes?: number; onEdit: () => void; onClose: () => void; onDelete?: () => void; disableClose?: boolean }) {
     return (
         <div className={styles.expandedInner}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div className={styles.expandedHeader}>
                 <div>
                     <strong className={styles.title}>{iman.materia}</strong>
                     <div className={styles.meta}>{iman.docente} <em>({iman.rol})</em></div>
