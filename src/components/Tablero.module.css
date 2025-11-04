@@ -6,6 +6,118 @@
   overflow: hidden;
 }
 
+/* keep grid gaps controlled by internal cell/padding; removed extra column/row gaps to restore previous compact layout */
+
+.layout {
+  display: block;
+  gap: 18px;
+}
+
+
+.leftTray {
+  background: #fbfdff;
+  border: 1px solid #eef2f7;
+  border-radius: 0 8px 8px 0;
+  padding: 12px;
+  max-height: calc(100vh - var(--header-height, 64px));
+  overflow: auto;
+  position: fixed;
+  left: 0;
+  top: var(--header-height, 64px); /* align under header (uses --header-height) */
+  bottom: 0;
+  width: var(--tray-width, 300px);
+  z-index: 60;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  transform: translateX(0);
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1), width 220ms ease;
+}
+
+.leftTrayCollapsed {
+  transform: translateX(-100%);
+}
+
+
+.appRoot {
+  height: calc(100vh - var(--header-height, 64px));
+  display: block;
+}
+
+.layout { height: 100%; }
+
+.leftTray { transition: transform 220ms ease; }
+
+.trayToggle {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.mainShifted {
+  /* keep layout width stable; we'll translate the boards container instead */
+  transition: margin-left 220ms ease;
+}
+
+.mainCentered {
+  margin-left: 0 !important;
+  margin-right: 0;
+  /* center children horizontally */
+  display: flex;
+  justify-content: center;
+  transition: margin 220ms ease;
+}
+
+.boardsContainer {
+  /* use the available viewport width but cap at --boards-max-width; always
+     keep 2x edge margins when the tray is closed */
+  width: min(var(--boards-max-width, 800px), calc(100vw - calc(var(--board-edge-margin, 2px) * 2)));
+  max-width: var(--boards-max-width, 800px);
+  margin: 12px auto; /* center when tray is closed */
+  transition: margin 220ms cubic-bezier(.2,.9,.2,1), width 220ms ease;
+}
+
+.mainShifted .boardsContainer {
+  width: calc(100vw - var(--tray-width, 300px) - 80px - calc(var(--board-edge-margin, 2px) * 2));
+  margin-left: calc(var(--tray-width, 300px) + 46px + var(--board-edge-margin, 2px));
+  margin-right: var(--boards-max-width, 2px);
+}
+
+/* ensure centered appearance when tray closed */
+.mainCentered .boardsContainer {
+  transform: none;
+}
+
+/* small top offset so boards sit visibly below header */
+.boardsContainer { padding-top: var(--board-edge-margin, 24px); padding-right: var(--board-edge-margin, 24px); }
+
+.searchInput {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e6eef7;
+  margin-bottom: 10px;
+}
+
+.trayGroup {
+  margin-bottom: 14px;
+}
+
+.trayGroupTitle {
+  font-weight: 700;
+  margin: 6px 0 8px;
+  color: #111827;
+}
+
+.trayList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rightContent {
+  min-width: 0; /* allow content to shrink inside grid */
+}
+
 .headerCell {
   background: #f9fafb;
   padding: 10px;
@@ -52,8 +164,15 @@
 
 .rowHeader {
   background: #f9fafb;
-  padding: 10px;
+  padding: 6px 8px;
   font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  /* make the first column visually narrower */
+  white-space: nowrap;
 }
 
 .celdaLabel {
@@ -125,6 +244,17 @@
 .noPrint {
   display: inline-block;
 }
+
+.exportBtn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.exportBtn:hover { filter: brightness(0.95); }
 
 .printArea {
   display: none; /* visible only in print */

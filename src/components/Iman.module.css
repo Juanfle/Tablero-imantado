@@ -189,6 +189,43 @@
   background: #f3f4f6;
 }
 
+/* Outline / neutral but bordered button (used for Cancel) */
+.btnOutline {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+}
+
+/* Text-only danger button (no background) */
+.btnTextDanger {
+  background: transparent;
+  border: none;
+  color: #dc2626; /* red-600 */
+  padding: 6px 8px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* Trash icon button placed to the left of the header info */
+.trashButton {
+  background: transparent;
+  border: none;
+  color: #dc2626; /* red */
+  padding: 6px 8px;
+  margin-right: 12px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.trashButton:hover {
+  background: rgba(220,38,38,0.06);
+}
+
 /* Responsive: en pantallas chicas, la grilla se vuelve columna única y el modal se ajusta */
 @media (max-width: 560px) {
   .formGrid {

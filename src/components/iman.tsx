@@ -121,10 +121,10 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
                 </div>
             </div>
 
-            <div className={styles.actions}>
-                <button onClick={save} className={`${styles.btn} ${styles.btnPrimary}`}>Guardar</button>
-                <button onClick={onCancel} className={`${styles.btn} ${styles.btnNeutral}`}>Cancelar</button>
-            </div>
+                <div className={styles.actions}>
+                    <button onClick={save} className={`${styles.btn} ${styles.btnPrimary}`}>Guardar</button>
+                    <button onClick={onCancel} className={`${styles.btn} ${styles.btnOutline}`}>Cancelar</button>
+                </div>
         </div>
     );
 }
@@ -162,7 +162,24 @@ function ExpandedImanView({ iman, onEdit, onClose, onDelete, disableClose }: { i
     return (
         <div className={styles.expandedInner}>
             <div className={styles.expandedHeader}>
-                <div>
+                {/* trash icon button on the left */}
+                {onDelete && (
+                    <button
+                        onClick={onDelete}
+                        className={styles.trashButton}
+                        aria-label="Eliminar imán"
+                        title="Eliminar"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M3 6h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M10 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M14 11v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                )}
+                <div style={{ flex: 1 }}>
                     <strong className={styles.title}>{iman.materia}</strong>
                     <div className={styles.meta}>{iman.docente} <em>({iman.rol})</em></div>
                     {iman.docente2 && (
@@ -171,10 +188,7 @@ function ExpandedImanView({ iman, onEdit, onClose, onDelete, disableClose }: { i
                 </div>
                 <div className={styles.actions}>
                     <button onClick={onEdit} className={`${styles.btn} ${styles.btnPrimary}`}>Editar</button>
-                    {onDelete && (
-                        <button onClick={onDelete} className={`${styles.btn} ${styles.btnNeutral}`} style={{ background: '#fee2e2', color: '#991b1b' }}>Eliminar</button>
-                    )}
-                    <button disabled={disableClose} onClick={onClose} className={`${styles.btn} ${styles.btnNeutral}`} style={{ opacity: disableClose ? 0.5 : 1, cursor: disableClose ? 'not-allowed' : 'pointer' }}>{disableClose ? 'Cerrar (bloqueado)' : 'Cerrar'}</button>
+                    <button disabled={disableClose} onClick={onClose} className={`${styles.btn} ${styles.btnOutline}`} style={{ opacity: disableClose ? 0.5 : 1, cursor: disableClose ? 'not-allowed' : 'pointer' }}>{disableClose ? 'Cerrar (bloqueado)' : 'Cerrar'}</button>
                 </div>
             </div>
             <div className={styles.modules}>Módulos: {iman.modulos}</div>

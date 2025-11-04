@@ -1,9 +1,47 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+:root {
+  --header-height: 64px;
+  --tray-width: 300px; /* slightly narrower tray */
+  --board-edge-margin: 2px; /* margin between board and page edges */
+  --boards-max-width: 1100px; /* cap for tablero when viewport is wide */
 }
+
+#root {
+  /* full-bleed root: allow app to reach the viewport edges */
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Top header style: small, separated, matches left tray background */
+.topHeader {
+  height: var(--header-height);
+  background: #fbfdff; /* same as left tray */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #eef2f7;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 120;
+}
+
+.appWrapper {
+  /* reserve space for the fixed top header so content doesn't sit under it */
+  padding-top: var(--header-height);
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.topHeader h1 { margin: 0; font-size: 20px; }
+.topHeader p { margin: 0; font-size: 12px; color: #6b7280; }
 
 .logo {
   height: 6em;
