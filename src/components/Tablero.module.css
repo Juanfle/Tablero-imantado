@@ -20,7 +20,16 @@
   border-radius: 0 8px 8px 0;
   padding: 12px;
   max-height: calc(100vh - var(--header-height, 64px));
-  overflow: auto;
+  /* avoid horizontal scrollbars during drag; allow only vertical scroll */
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* prevent scroll chaining to page while interacting with the tray */
+  overscroll-behavior: contain;
+  /* on touch devices, allow vertical panning only to avoid horizontal jiggle while dragging */
+  touch-action: pan-y;
+  /* Subtle/transparent scrollbar by default; enhanced on hover */
+  scrollbar-width: thin;                     /* Firefox */
+  scrollbar-color: transparent transparent;  /* Firefox initial state */
   position: fixed;
   left: 0;
   top: var(--header-height, 64px); /* align under header (uses --header-height) */
@@ -32,6 +41,32 @@
   transition: transform 220ms cubic-bezier(.2,.9,.2,1), width 220ms ease;
 }
 
+/* On hover, show a subtle thumb color in Firefox */
+.leftTray:hover {
+  scrollbar-color: rgba(0,0,0,0.22) transparent;
+}
+
+/* WebKit-based browsers (Chrome/Edge/Safari) */
+.leftTray::-webkit-scrollbar {
+  width: 10px;
+}
+.leftTray::-webkit-scrollbar-track {
+  background: transparent;
+}
+.leftTray::-webkit-scrollbar-thumb {
+  background-color: transparent;    /* invisible by default */
+  border-radius: 8px;               /* rounded to match tray */
+  border: 3px solid transparent;    /* creates padding around the thumb */
+  background-clip: padding-box;     /* keep the inner color rounded */
+}
+.leftTray:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.22); /* appear only on hover */
+}
+.leftTray::-webkit-scrollbar-thumb:active {
+  background-color: rgba(0,0,0,0.32);
+}
+.leftTray::-webkit-scrollbar-corner { background: transparent; }
+
 .leftTrayCollapsed {
   transform: translateX(-100%);
 }
@@ -40,11 +75,19 @@
 .appRoot {
   height: calc(100vh - var(--header-height, 64px));
   display: block;
+  /* prevent page-level horizontal scrollbar appearing during drags */
+  overflow-x: hidden;
 }
 
 .layout { height: 100%; }
 
 .leftTray { transition: transform 220ms ease; }
+
+/* When dragging from the tray, freeze its scroll to avoid content shifting */
+.trayDragging {
+  overflow-y: hidden !important;
+  touch-action: none !important;
+}
 
 .trayToggle {
   background: transparent;

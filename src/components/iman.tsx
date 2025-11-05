@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './Iman.module.css';
 import { useDraggable } from '@dnd-kit/core';
 import type { Iman as ImanType } from '../types';
@@ -35,6 +36,8 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
     ];
 
     const save = () => {
+        // ensure módulos >= 1
+        const parsedModulos = Math.max(1, Number(modulos) || 1);
         const patch: Partial<ImanType> = {
             materia: materia.trim(),
             docente: docente.trim(),
@@ -43,7 +46,7 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
             // If there's a secondary teacher, it is always a Suplente
             docente2: docente2.trim() ? docente2.trim() : undefined,
             rol2: docente2.trim() ? 'Sup' : undefined,
-            modulos: Number(modulos) || 0,
+            modulos: parsedModulos,
             color: color || undefined,
         };
         if (isNew && onCreate) {
@@ -53,7 +56,7 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
                 rol: (patch.rol as ImanType['rol']) ?? 'Tit',
                 docente2: patch.docente2,
                 rol2: patch.rol2,
-                modulos: patch.modulos ?? 1,
+                modulos: Math.max(1, patch.modulos ?? 1),
                 color: patch.color,
             };
             onCreate(data);
@@ -77,7 +80,7 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
 
                 <div>
                     <label className={styles.label}>Módulos</label>
-                    <input className={styles.input} value={modulos} onChange={e => setModulos(e.target.value)} placeholder="Módulos" />
+                    <input className={styles.input} type="number" min={1} step={1} value={modulos} onChange={e => setModulos(e.target.value)} placeholder="Módulos" />
                 </div>
 
                 <div>
@@ -238,7 +241,7 @@ export default function Iman(props: BaseProps & { draggable?: boolean }) {
         <>
             <div className={styles.root} onDoubleClick={() => setExpanded(true)}>{content}</div>
 
-            {(expanded || editing) && (
+            {(expanded || editing) && createPortal(
                 // Backdrop covers full viewport. If editing is true, clicking backdrop does nothing.
                 <div className={styles.backdrop} onMouseDown={() => { if (!editing) setExpanded(false); }}>
                     <div role="dialog" aria-modal="true" onMouseDown={e => e.stopPropagation()} className={styles.modal}>
@@ -249,7 +252,8 @@ export default function Iman(props: BaseProps & { draggable?: boolean }) {
                             <ExpandedImanView iman={props.iman} restantes={props.restantes} onEdit={() => setEditing(true)} onClose={() => { if (!editing) setExpanded(false); }} onDelete={handleDelete} disableClose={editing} />
                         )}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </>
     );

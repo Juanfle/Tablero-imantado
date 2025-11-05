@@ -14,6 +14,7 @@ import { BLOQUES, DIAS } from '../data';
 import type { Dia, Bloque, Iman as ImanModel, Anio } from '../types';
 import { useTableroStore } from '../store/useTableroStore';
 import Iman, { ImanEditor } from './iman';
+import { createPortal } from 'react-dom';
 
 function Celda({
     anio,
@@ -38,7 +39,7 @@ function Celda({
 }
 
 export default function Tablero() {
-    const { imanes, posiciones, ubicarIman, removerImanEn, moverIman, addIman } = useTableroStore();
+    const { imanes, posiciones, ubicarIman, removerImanEn, moverIman, addIman, usadosDe } = useTableroStore();
     const [mensaje, setMensaje] = useState<string | null>(null);
     const [showExportTeachers, setShowExportTeachers] = useState(false);
     const sensors = useSensors(
@@ -285,7 +286,9 @@ export default function Tablero() {
             {mensaje && <div className={tstyles.message}>{mensaje}</div>}
 
             <div className={tstyles.layout}>
-                <aside className={`${tstyles.leftTray} ${trayOpen ? '' : tstyles.leftTrayCollapsed}`}>
+                {/* Wrap tray and boards in a single DnD context so items can be dragged from the tray to the boards */}
+                <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} autoScroll={false}>
+                <aside className={`${tstyles.leftTray} ${activeIman ? tstyles.trayDragging : ''} ${trayOpen ? '' : tstyles.leftTrayCollapsed}`}>
                     <div className={tstyles.trayHeader}>
                         <input className={tstyles.searchInput} placeholder="Buscar materia o docente" value={search} onChange={e => setSearch(e.target.value)} />
                         {trayOpen && (
@@ -317,15 +320,18 @@ export default function Tablero() {
                                     </div>
                                 </div>
                                 <div className={tstyles.trayList}>
-                                    {list.map(i => (
-                                        <Iman key={i.id} iman={i} restantes={0} draggable />
-                                    ))}
+                                    {list.map(i => {
+                                        const restantes = Math.max(i.modulos - usadosDe(i.id), 0);
+                                        return (
+                                            <Iman key={i.id} iman={i} restantes={restantes} draggable />
+                                        );
+                                    })}
                                 </div>
                             </div>
                         );
                     })}
 
-                    {showCreateAnio && (
+                    {showCreateAnio && createPortal(
                         <div className={tstyles.createBackdrop} onMouseDown={() => setShowCreateAnio(null)}>
                             <div role="dialog" aria-modal="true" onMouseDown={e => e.stopPropagation()} className={tstyles.modal}>
                                 <ImanEditor
@@ -337,7 +343,8 @@ export default function Tablero() {
                                     }}
                                 />
                             </div>
-                        </div>
+                        </div>,
+                        document.body
                     )}
                 </aside>
                 {!trayOpen && (
@@ -353,7 +360,7 @@ export default function Tablero() {
 
                                 <main className={`${tstyles.rightContent} ${trayOpen ? tstyles.mainShifted : tstyles.mainCentered}`}>
                                         <div className={tstyles.boardsContainer}>
-                                            <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+                        
                                                 {ANIOS.map((anio) => {
                             const imanesForYear = imanes.filter(i => (i.anio ?? 3) === anio);
                             const posicionesForYear = posiciones.filter(p => p.anio === anio);
@@ -430,15 +437,10 @@ export default function Tablero() {
                             );
                         })}
 
-                        <DragOverlay dropAnimation={null}>
-                            {activeIman ? (
-                                <div className={tstyles.dragOverlay}>
-                                    <Iman iman={activeIman} restantes={0} />
-                                </div>
-                            ) : null}
-                        </DragOverlay>
-                                            </DndContext>
+                        
                                         </div>
+
+                    {/* Drag overlay will be placed after </main> to keep DOM order clean */}
 
                     {showExportTeachers && (
                         <div className={tstyles.createBackdrop} onMouseDown={() => setShowExportTeachers(false)}>
@@ -499,6 +501,16 @@ export default function Tablero() {
                         })}
                     </div>
                 </main>
+
+                {/* Drag overlay for dnd-kit */}
+                <DragOverlay dropAnimation={null}>
+                    {activeIman ? (
+                        <div className={tstyles.dragOverlay}>
+                            <Iman iman={activeIman} restantes={0} />
+                        </div>
+                    ) : null}
+                </DragOverlay>
+                </DndContext>
             </div>
         </div>
     );
