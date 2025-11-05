@@ -95,7 +95,6 @@
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #e6eef7;
-  margin-bottom: 10px;
 }
 
 .trayGroup {
@@ -116,6 +115,53 @@
 
 .rightContent {
   min-width: 0; /* allow content to shrink inside grid */
+}
+
+/* Tray header with inline close icon */
+.trayHeader {
+  display: flex;
+  align-items: center; /* esto ya está perfecto */
+  gap: 8px;
+}
+
+.trayHeader input,
+.trayHeader button {
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Close button inside tray: SVG-only, no background */
+.trayClose {
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #374151;
+  line-height: 1;
+  vertical-align: middle;
+}
+.trayClose:hover { background: transparent; }
+
+/* External handle when tray is closed: fixed at left edge, SVG-only */
+.trayHandle {
+  position: fixed;
+  left: 10px;
+  top: calc(var(--header-height, 64px) + 16px); /* place near the top, below header */
+  transform: none;
+  z-index: 130;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #374151;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .headerCell {

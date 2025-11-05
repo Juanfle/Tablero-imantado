@@ -82,15 +82,15 @@ export function ImanEditor({ iman, onCancel, isNew, onCreate }: { iman?: ImanTyp
 
                 <div>
                     <label className={styles.label}>Docente</label>
-                    <input className={styles.input} value={docente} onChange={e => setDocente(e.target.value)} placeholder="Docente principal" />
+                    <input className={styles.input} value={docente} onChange={e => setDocente(e.target.value)} placeholder="Docente" />
                 </div>
 
                 <div>
                     <label className={styles.label}>Situación de revista</label>
                     {/* primary role: only Tit or Prov */}
                     <select className={styles.input} value={rol} onChange={e => setRol(e.target.value as ImanType['rol'])}>
-                        <option value="Tit">Tit</option>
-                        <option value="Prov">Prov</option>
+                        <option value="Tit">Titular</option>
+                        <option value="Prov">Provisional</option>
                     </select>
                 </div>
             </div>

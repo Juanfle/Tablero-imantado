@@ -11,15 +11,6 @@ function App() {
   <div className="appWrapper">
   <header className="topHeader" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => window.dispatchEvent(new CustomEvent('toggleTray'))} aria-label="Alternar bandeja" title="Abrir/cerrar bandeja" style={{ width: 36, height: 36, display: 'grid', placeItems: 'center', borderRadius: 8 }}>
-            {/* hamburger icon */}
-            <svg width="18" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M3 6h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              <path d="M3 12h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              <path d="M3 18h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-          </button>
-
           <div>
             <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Horarios</h1>
             <p style={{ margin: 0, color: '#6b7280', fontSize: 12 }}>Planificador de horarios</p>

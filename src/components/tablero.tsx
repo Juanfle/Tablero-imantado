@@ -286,19 +286,18 @@ export default function Tablero() {
 
             <div className={tstyles.layout}>
                 <aside className={`${tstyles.leftTray} ${trayOpen ? '' : tstyles.leftTrayCollapsed}`}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <div className={tstyles.trayHeader}>
                         <input className={tstyles.searchInput} placeholder="Buscar materia o docente" value={search} onChange={e => setSearch(e.target.value)} />
-                        <button title={trayOpen ? 'Cerrar bandeja' : 'Abrir bandeja'} onClick={() => setTrayOpen(s => !s)} className={tstyles.trayToggle} style={{ marginLeft: 8 }}>
-                            {trayOpen ? (
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                    <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                        {trayOpen && (
+                            <button aria-label="Cerrar bandeja" title="Cerrar bandeja" onClick={() => setTrayOpen(false)} className={tstyles.trayClose}>
+                                {/* Chevron-left-pipe (close) */}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <path d="M0 0h24v24H0z" fill="none" stroke="none" />
+                                    <path d="M7 6v12" />
+                                    <path d="M18 6l-6 6l6 6" />
                                 </svg>
-                            ) : (
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                    <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            )}
-                        </button>
+                            </button>
+                        )}
                     </div>
 
                     {ANIOS.map(anio => {
@@ -341,6 +340,16 @@ export default function Tablero() {
                         </div>
                     )}
                 </aside>
+                {!trayOpen && (
+                    <button aria-label="Abrir bandeja" title="Abrir bandeja" className={tstyles.trayHandle} onClick={() => setTrayOpen(true)}>
+                        {/* Chevron-right-pipe (open) */}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M0 0h24v24H0z" fill="none" stroke="none" />
+                            <path d="M6 6l6 6l-6 6" />
+                            <path d="M17 5v13" />
+                        </svg>
+                    </button>
+                )}
 
                                 <main className={`${tstyles.rightContent} ${trayOpen ? tstyles.mainShifted : tstyles.mainCentered}`}>
                                         <div className={tstyles.boardsContainer}>
