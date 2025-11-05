@@ -225,23 +225,19 @@ export default function Tablero() {
         return canonical;
     };
 
-    const copyTeachersToClipboard = async () => {
-        const list = buildTeacherList();
+    const copyTeachersToClipboard = async (names?: string[]) => {
+        const list = names ?? buildTeacherList();
         const text = list.join('\n');
         try {
             await navigator.clipboard.writeText(text);
-            setMensaje('Lista copiada al portapapeles');
         } catch (err) {
-            setMensaje('No se pudo copiar; copiala manualmente');
         }
-        setTimeout(() => setMensaje(null), 2000);
     };
 
     // Listen for global events dispatched from the header (App) to trigger print/export
     useEffect(() => {
         const onOpen = () => setShowExportTeachers(true);
         const onPrint = () => {
-            setMensaje('Abriendo diálogo de impresión...');
             try {
                 const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
                 const isEdge = ua.includes('Edg') || ua.includes('Edge');
@@ -255,7 +251,6 @@ export default function Tablero() {
             } catch (err) {
                 window.print();
             }
-            setTimeout(() => setMensaje(null), 2000);
         };
 
         const onToggle = () => setTrayOpen(s => !s);
@@ -280,6 +275,9 @@ export default function Tablero() {
         const s = search.toLowerCase();
         return (i.materia?.toLowerCase().includes(s) || (i.docente ?? '').toLowerCase().includes(s) || (i.docente2 ?? '').toLowerCase().includes(s));
     };
+
+    // search state for teachers modal
+    const [teacherSearch, setTeacherSearch] = useState('');
 
     return (
         <div className={tstyles.appRoot}>
@@ -307,7 +305,12 @@ export default function Tablero() {
                         const list = (grouped.get(anio) ?? []).filter(i => matchesSearch(i));
                         if (list.length === 0) return (
                             <div key={`tray-empty-${anio}`} className={tstyles.trayGroup}>
-                                <div className={tstyles.trayGroupTitle}>{anio}° año</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div className={tstyles.trayGroupTitle}>{anio}° año</div>
+                                    <div>
+                                        <button onClick={() => setShowCreateAnio(s => s === anio ? null : anio)} style={{ fontSize: 13 }}>{showCreateAnio === anio ? 'Cancelar' : 'Crear'}</button>
+                                    </div>
+                                </div>
                                 <div style={{ color: '#6b7280', fontSize: 13 }}>No hay imanes</div>
                             </div>
                         );
@@ -338,8 +341,8 @@ export default function Tablero() {
                                     isNew
                                     onCancel={() => setShowCreateAnio(null)}
                                     onCreate={(data) => {
-                                        const id = addIman({ ...data, anio: showCreateAnio as Anio });
-                                        setMensaje(`Imán creado (${id})`);
+                                        addIman({ ...data, anio: showCreateAnio as Anio });
+                                        setShowCreateAnio(null);
                                     }}
                                 />
                             </div>
@@ -445,16 +448,35 @@ export default function Tablero() {
                     {showExportTeachers && (
                         <div className={tstyles.createBackdrop} onMouseDown={() => setShowExportTeachers(false)}>
                             <div role="dialog" aria-modal="true" onMouseDown={e => e.stopPropagation()} className={tstyles.modal}>
-                                <div style={{ padding: 12, maxWidth: 520 }}>
-                                    <h3>Docentes (únicos)</h3>
-                                    <div style={{ maxHeight: 320, overflow: 'auto', marginBottom: 12 }}>
-                                        <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{buildTeacherList().join('\n')}</pre>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                                        <button onClick={() => copyTeachersToClipboard()}>Copiar</button>
-                                        <button onClick={() => setShowExportTeachers(false)}>Cerrar</button>
-                                    </div>
-                                </div>
+                                {(() => {
+                                    const all = buildTeacherList();
+                                    const q = teacherSearch.trim();
+                                    const filtered = q ? all.filter(n => normalize(n).includes(normalize(q))) : all;
+                                    return (
+                                        <div style={{ padding: 16, width: 'min(92vw, 720px)' }}>
+                                            <h3 style={{ marginTop: 0, marginBottom: 10 }}>Docentes (únicos)</h3>
+                                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+                                                <input
+                                                    className={tstyles.searchInput}
+                                                    placeholder="Buscar docente"
+                                                    value={teacherSearch}
+                                                    onChange={(e) => setTeacherSearch(e.target.value)}
+                                                    style={{ marginBottom: 0 }}
+                                                />
+                                                <div style={{ color: '#6b7280', fontSize: 13 }}>
+                                                    {filtered.length} de {all.length}
+                                                </div>
+                                            </div>
+                                            <div style={{ maxHeight: '60vh', overflow: 'auto', marginBottom: 12 }}>
+                                                <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>{filtered.join('\n')}</pre>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                                <button onClick={() => copyTeachersToClipboard(filtered)}>Copiar</button>
+                                                <button onClick={() => setShowExportTeachers(false)}>Cerrar</button>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         </div>
                     )}

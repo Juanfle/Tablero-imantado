@@ -40,22 +40,23 @@ export const useTableroStore = create<TableroState>()(
             ubicarIman: (imanId, dia, bloque, anio) => {
                 const { posiciones, imanes, usadosDe } = get();
                 const iman = imanes.find(i => i.id === imanId);
-                if (!iman) return { ok: false, reason: 'Imán inexistente' };
+                if (!iman) return { ok: false };
 
                 // ensure iman belongs to this year
-                if ((iman.anio ?? 3) !== anio) return { ok: false, reason: 'Este imán no pertenece a este año' };
+                if ((iman.anio ?? 3) !== anio) return { ok: false };
 
                 const yaOcupada = posiciones.find(p => p.dia === dia && p.bloque === bloque && p.anio === anio);
-                if (yaOcupada) {
-                    return { ok: false, reason: `La celda ${dia} ${bloque} ya está ocupada` };
-                }
 
                 const usados = usadosDe(imanId);
                 if (usados >= iman.modulos) {
-                    return {
-                    ok: false,
-                    reason: `${iman.materia} – ${iman.docente} ya usó sus ${iman.modulos} módulo(s)`
-                    };
+                    return { ok: false };
+                }
+
+                if (yaOcupada) {
+                    // Replace occupant: remove existing position for that cell and place the new iman
+                    const sinEsa = posiciones.filter(p => !(p.dia === dia && p.bloque === bloque && p.anio === anio));
+                    set({ posiciones: [...sinEsa, { imanId, dia, bloque, anio }] });
+                    return { ok: true };
                 }
 
                 set({ posiciones: [...posiciones, { imanId, dia, bloque, anio }] });
@@ -71,7 +72,7 @@ export const useTableroStore = create<TableroState>()(
                 const { posiciones } = get();
 
                 const src = posiciones.find(p => p.dia === fromDia && p.bloque === fromBloque && p.anio === anio);
-                if (!src) return { ok: false, reason: 'No hay imán en la celda de origen' };
+                if (!src) return { ok: false };
 
                 const dst = posiciones.find(p => p.dia === toDia && p.bloque === toBloque && p.anio === anio);
 
