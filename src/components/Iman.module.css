@@ -247,3 +247,13 @@
     width: 100%;
   }
 }
+
+/* Dark theme for magnets and modal */
+[data-theme="dark"] .iman {
+  /* color: #f3f4f6; */
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+[data-theme="dark"] .restantes { background: rgba(0,0,0,0.25); color: #f9fafb; }
+[data-theme="dark"] .modal { background: #111827; color: #e5e7eb; }
+[data-theme="dark"] .modules { color: rgba(229,231,235,0.7); }

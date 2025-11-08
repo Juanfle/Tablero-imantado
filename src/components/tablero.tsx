@@ -31,7 +31,7 @@ function Celda({
     const { setNodeRef, isOver } = useDroppable({ id });
 
     return (
-        <div ref={setNodeRef} className={`${tstyles.celda} ${isOver ? tstyles.celdaHover : ''}`}>
+        <div ref={setNodeRef} className={`${tstyles.celda} ${isOver ? tstyles.celdaHover : ''}`} data-bloque={bloque}>
             {children}
             <div className={tstyles.celdaLabel}>{bloque}</div>
         </div>
@@ -52,6 +52,67 @@ export default function Tablero() {
     const ANIOS: Anio[] = [1, 2, 3, 4, 5, 6];
     const [search, setSearch] = useState('');
     const [trayOpen, setTrayOpen] = useState(true);
+
+    // --- Time-now line state and refs ---
+    const gridRefs = useRef<Map<Anio, HTMLDivElement>>(new Map());
+    const [nowMins, setNowMins] = useState<number>(() => {
+        const d = new Date();
+        return d.getHours() * 60 + d.getMinutes();
+    });
+    const [lineTops, setLineTops] = useState<Map<Anio, number | null>>(new Map());
+
+    const parseTime = (s: string) => {
+        const m = s.trim().match(/^(\d{1,2}):(\d{2})$/);
+        if (!m) return null;
+        const h = parseInt(m[1], 10);
+        const mm = parseInt(m[2], 10);
+        return h * 60 + mm;
+    };
+    const blocks = BLOQUES.map(b => {
+        const parts = String(b).split(/\s*a\s*/);
+        const start = parseTime(parts[0]);
+        const end = parseTime(parts[1] ?? '');
+        return { label: b, start: start ?? null, end: end ?? null } as { label: Bloque; start: number | null; end: number | null };
+    });
+
+    // Update current minutes every 30s
+    useEffect(() => {
+        const id = setInterval(() => {
+            const d = new Date();
+            setNowMins(d.getHours() * 60 + d.getMinutes());
+        }, 30000);
+        return () => clearInterval(id);
+    }, []);
+
+    // Recompute line positions on time change or layout changes
+    useEffect(() => {
+        const compute = () => {
+            const next = new Map<Anio, number | null>();
+            const idx = blocks.findIndex(b => b.start != null && b.end != null && nowMins >= (b.start as number) && nowMins <= (b.end as number));
+            for (const anio of [1,2,3,4,5,6] as Anio[]) {
+                const grid = gridRefs.current.get(anio);
+                if (!grid || idx === -1) { next.set(anio, null); continue; }
+                const blk = blocks[idx];
+                const sel = `.${tstyles.celda}[data-bloque="${blk.label}"]`;
+                const cell = grid.querySelector(sel) as HTMLElement | null;
+                if (!cell) { next.set(anio, null); continue; }
+                const gridRect = grid.getBoundingClientRect();
+                const cellRect = cell.getBoundingClientRect();
+                const start = blk.start as number;
+                const end = blk.end as number;
+                const frac = Math.min(1, Math.max(0, (nowMins - start) / (end - start)));
+                const top = (cellRect.top - gridRect.top) + frac * cellRect.height;
+                next.set(anio, top);
+            }
+            setLineTops(next);
+        };
+
+        compute();
+        const ro = new ResizeObserver(() => compute());
+        // observe all known grids
+        gridRefs.current.forEach((el) => { if (el) ro.observe(el); });
+        return () => ro.disconnect();
+    }, [nowMins]);
 
     const onDragStart = (e: DragStartEvent) => {
         const activeId = String(e.active.id);
@@ -100,10 +161,16 @@ export default function Tablero() {
     };
 
     const printRef = useRef<HTMLDivElement | null>(null);
+    const printPartesRef = useRef<HTMLDivElement | null>(null);
 
-    const handlePrint = useReactToPrint({
+    const handlePrintHorarios = useReactToPrint({
         content: () => printRef.current,
         documentTitle: 'Horarios',
+        copyStyles: true,
+    });
+    const handlePrintPartes = useReactToPrint({
+        content: () => printPartesRef.current,
+        documentTitle: 'Partes diarios',
         copyStyles: true,
     });
 
@@ -137,6 +204,41 @@ export default function Tablero() {
                 window.print();
             } finally {
                 // cleanup after a short delay to ensure print dialog has captured content
+                setTimeout(() => {
+                    try { wrapper.remove(); } catch (e) {}
+                    try { styleEl.remove(); } catch (e) {}
+                }, 500);
+            }
+        }, 60);
+    };
+
+    const printPartesViaTemporaryWrapper = () => {
+        const content = printPartesRef.current;
+        if (!content) {
+            window.print();
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'temp-print-wrapper';
+        wrapper.setAttribute('data-temp-print', '1');
+        wrapper.appendChild(content.cloneNode(true));
+
+        const styleEl = document.createElement('style');
+        styleEl.setAttribute('data-temp-print-style', '1');
+        styleEl.textContent = `
+            body > *:not(.temp-print-wrapper) { display: none !important; }
+            .temp-print-wrapper { display: block !important; }
+            @page { size: A4 landscape; margin: 8mm; }
+        `;
+
+        document.head.appendChild(styleEl);
+        document.body.appendChild(wrapper);
+
+        setTimeout(() => {
+            try {
+                window.print();
+            } finally {
                 setTimeout(() => {
                     try { wrapper.remove(); } catch (e) {}
                     try { styleEl.remove(); } catch (e) {}
@@ -237,14 +339,30 @@ export default function Tablero() {
     // Listen for global events dispatched from the header (App) to trigger print/export
     useEffect(() => {
         const onOpen = () => setShowExportTeachers(true);
-        const onPrint = () => {
+        const onPrintHorarios = () => {
             try {
                 const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
                 const isEdge = ua.includes('Edg') || ua.includes('Edge');
                 if (isEdge) {
                     printViaTemporaryWrapper();
-                } else if (typeof handlePrint === 'function') {
-                    handlePrint();
+                } else if (typeof handlePrintHorarios === 'function') {
+                    handlePrintHorarios();
+                } else {
+                    window.print();
+                }
+            } catch (err) {
+                window.print();
+            }
+        };
+
+        const onPrintPartes = () => {
+            try {
+                const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+                const isEdge = ua.includes('Edg') || ua.includes('Edge');
+                if (isEdge) {
+                    printPartesViaTemporaryWrapper();
+                } else if (typeof handlePrintPartes === 'function') {
+                    handlePrintPartes();
                 } else {
                     window.print();
                 }
@@ -256,11 +374,13 @@ export default function Tablero() {
         const onToggle = () => setTrayOpen(s => !s);
 
         window.addEventListener('openExportTeachers', onOpen as EventListener);
-        window.addEventListener('triggerPrint', onPrint as EventListener);
+        window.addEventListener('triggerPrint', onPrintHorarios as EventListener);
+        window.addEventListener('triggerPrintPartes', onPrintPartes as EventListener);
         window.addEventListener('toggleTray', onToggle as EventListener);
         return () => {
             window.removeEventListener('openExportTeachers', onOpen as EventListener);
-            window.removeEventListener('triggerPrint', onPrint as EventListener);
+            window.removeEventListener('triggerPrint', onPrintHorarios as EventListener);
+            window.removeEventListener('triggerPrintPartes', onPrintPartes as EventListener);
             window.removeEventListener('toggleTray', onToggle as EventListener);
         };
     }, []);
@@ -384,7 +504,14 @@ export default function Tablero() {
                                         <h3 className={tstyles.bandejaTitle}>{anio}° año</h3>
                                     </div>
 
-                                    <div className={tstyles.grid} style={{ gridTemplateColumns: `70px repeat(${DIAS.length}, 1fr)`, marginTop: 8 }}>
+                                    <div
+                                        className={tstyles.grid}
+                                        style={{ gridTemplateColumns: `70px repeat(${DIAS.length}, 1fr)`, marginTop: 8 }}
+                                        ref={(el) => {
+                                            if (el) gridRefs.current.set(anio, el);
+                                            else gridRefs.current.delete(anio);
+                                        }}
+                                    >
                                         <div className={tstyles.headerCell}>{`${anio}° año`}</div>
                                         {DIAS.map((d) => (
                                             <div key={`${anio}-${d}`} className={tstyles.headerCell}>
@@ -435,6 +562,12 @@ export default function Tablero() {
                                                 )}
                                             </>
                                         ))}
+                                        {(() => {
+                                            const top = lineTops.get(anio) ?? null;
+                                            return top != null ? (
+                                                <div className={tstyles.timeNowLine} style={{ top }} aria-hidden="true" />
+                                            ) : null;
+                                        })()}
                                     </div>
                                 </section>
                             );
@@ -510,6 +643,67 @@ export default function Tablero() {
                                                                 <div className="printCellInner">
                                                                     <div className="printSubject"><strong>{iman.materia}</strong></div>
                                                                     <div className="printTeacher">{teacher}</div>
+                                                                </div>
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* print-only area for partes diarios (signature spaces) */}
+                    <div ref={printPartesRef} className={tstyles.printArea} aria-hidden="true">
+                        {ANIOS.map((anio) => {
+                            const imanesForYear = imanes.filter(i => (i.anio ?? 3) === anio);
+                            const posicionesForYear = posiciones.filter(p => p.anio === anio);
+                            return (
+                                <div key={`print-partes-${anio}`} className={tstyles.printPage}>
+                                    <div className={tstyles.printHeader}>{`Partes diarios - ${anio}° año`}</div>
+                                    <table className={`${tstyles.printTable} ${tstyles.printTablePartes}`}>
+                                        <thead>
+                                            <tr>
+                                                <th className={tstyles.printBloc}></th>
+                                                {DIAS.map(d => (
+                                                    <th key={`ph-${anio}-${d}`}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+                                                            <span style={{ fontSize: 16 }}>{d}</span>
+                                                            <span className={tstyles.fechaLinea}>Fecha: ____________________</span>
+                                                        </div>
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {BLOQUES.map(b => (
+                                                <tr key={`pr-${anio}-${b}`}>
+                                                    <td className={tstyles.printBloc}>{b}</td>
+                                                    {DIAS.map(d => {
+                                                        const pos = posicionesForYear.find(p => p.dia === d && p.bloque === b);
+                                                        const iman = pos ? imanesForYear.find(i => i.id === pos.imanId) : undefined;
+                                                        const hasIman = !!iman;
+                                                        const teacher = hasIman ? (iman!.docente2 && iman!.rol2 === 'Sup' ? iman!.docente2 : iman!.docente) : '';
+                                                        return (
+                                                            <td key={`pd-${anio}-${b}-${d}`}>
+                                                                <div
+                                                                    className="printCellInner"
+                                                                    style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: hasIman ? 'space-between' : 'center' }}
+                                                                >
+                                                                    <div style={{ textAlign: 'center', lineHeight: 1 }}>
+                                                                        {hasIman && (
+                                                                            <>
+                                                                                <div className="printSubject" style={{ fontSize: 13 }}><strong>{iman!.materia}</strong></div>
+                                                                                <div className="printTeacher" style={{ fontSize: 10, marginTop: 2 }}>{teacher}</div>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                    {hasIman && (
+                                                                        <div className={tstyles.firmaLinea}>Firma: ____________________</div>
+                                                                    )}
                                                                 </div>
                                                             </td>
                                                         );

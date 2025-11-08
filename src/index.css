@@ -3,8 +3,8 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color: rgb(0, 0, 0);
-  background-color: #c4c4c4;
+  color: #111827;
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -53,15 +53,17 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* Dark theme via data-theme attribute on <html> */
+[data-theme="dark"] {
+  color: #e5e7eb;
+  background-color: #0b0f14; /* page background */
 }
+
+[data-theme="dark"] body {
+  color: #e5e7eb;
+  background-color: #0b0f14;
+}
+
+[data-theme="dark"] a { color: #93c5fd; }
+[data-theme="dark"] a:hover { color: #bfdbfe; }
+[data-theme="dark"] button { background-color: #111827; color: #e5e7eb; border-color: #1f2937; }

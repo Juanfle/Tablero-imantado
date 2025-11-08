@@ -78,3 +78,11 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Dark theme overrides for header */
+[data-theme="dark"] .topHeader {
+  background: #0f172a; /* deep slate */
+  border-bottom-color: #1f2937;
+}
+[data-theme="dark"] .topHeader h1 { color: #e5e7eb; }
+[data-theme="dark"] .topHeader p { color: #9ca3af; }
